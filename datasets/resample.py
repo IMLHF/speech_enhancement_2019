@@ -3,7 +3,7 @@ import soundfile as sf
 import librosa
 import sys
 
-root_dir = sys.argv[1]
+root_dir = "/fast/datalhf/vctk/VCTK-Corpus/wav16"
 target_sr = 16000
 
 def resample_file(father_dir):

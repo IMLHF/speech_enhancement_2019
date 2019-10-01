@@ -1,5 +1,5 @@
 # ls | awk '{print "ln -s $VCTK_WAV16_DIR/"$0" train/speech/"$0}' > ../../../../lihongfeng/speech_enhancement_2019/datasets/split_vctk_speech_to_train_val_test.sh
-VCTK_WAV16_DIR=/home/zhangwenbo5/corpus/vctk_dataset/wav16
+VCTK_WAV16_DIR=/fast/datalhf/vctk/VCTK-Corpus/wav16
 mkdir -p train/speech test/speech validation/speech
 ln -s $VCTK_WAV16_DIR/p225 validation/speech/p225
 ln -s $VCTK_WAV16_DIR/p226 validation/speech/p226
