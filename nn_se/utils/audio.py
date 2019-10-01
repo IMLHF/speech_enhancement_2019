@@ -2,6 +2,7 @@ from numpy import linalg
 import numpy as np
 import soundfile as sf
 import librosa
+
 from ..FLAGS import PARAM
 
 '''
