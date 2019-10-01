@@ -1,6 +1,0 @@
-exclude.lst
-.gitignore
-.editorconfig
-README.md
-toserver.sh
-datasets
