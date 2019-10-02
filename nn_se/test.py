@@ -2,16 +2,18 @@ from .dataloader.dataloader import get_batch_inputs_from_dataset
 from .utils import audio
 from .FLAGS import PARAM
 import tensorflow as tf
-
+import numpy as np
+import os
 
 def test_dataloader_py():
   batch=get_batch_inputs_from_dataset(PARAM.train_name)
-  sess=tf.Session()
+  sess=tf.compat.v1.Session()
   sess.run(batch.initializer)
   clean, noise, mixed=sess.run([batch.clean, batch.noise, batch.mixed])
-  audio.write_audio(clean,"exp/test/clean.wav")
-  audio.write_audio(noise,"exp/test/noise.wav")
-  audio.write_audio(mixed,"exp/test/mixed.wav")
+  print(np.shape(clean))
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/clean.wav"),clean[0],16000)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/noise.wav"),noise[0],16000)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/mixed.wav"),mixed[0],16000)
 
 
 if __name__ == "__main__":
