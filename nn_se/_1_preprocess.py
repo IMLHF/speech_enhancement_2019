@@ -73,14 +73,14 @@ def prepare_train_validation_test_set(dataset_name): # for train/val/test
         assert PARAM.train_val_snr[0]<=PARAM.train_val_snr[1], "train_val_snr error."
         snr = np.random.randint(PARAM.train_val_snr[0], PARAM.train_val_snr[1]+1)
         record_line += "|"+str(snr)
-      meta_dataf.write(record_line)
+      meta_dataf.write(record_line+"\n")
     meta_dataf.close()
 
 
 def _gen_tfrecords_minprocessor(params, meta_list, tfrecords_dir:Path):
   s_site, e_site, i_processor = params
   tfrecords_f_dir = tfrecords_dir.joinpath("%03d.tfrecords" % i_processor)
-  with tf.python_io.TFRecordWriter(tfrecords_f_dir) as writer:
+  with tf.io.TFRecordWriter(str(tfrecords_f_dir)) as writer:
     for i in range(s_site, e_site):
       speech_dir, noise_dir, snr = str(meta_list[i]).split("|")
       snr = int(snr)
@@ -133,7 +133,7 @@ def generate_tfrecords_using_meta(dataset_name):
 
   func = partial(_gen_tfrecords_minprocessor, meta_list=meta_list, tfrecords_dir=tfrecords_dir)
   job = multiprocessing.Pool(PARAM.n_processor_gen_tfrecords).imap(func, param_list)
-  _ = list(tqdm(job, dataset_name, len(param_list), unit="tfrecords"))
+  _ = list(tqdm(job, dataset_name, len(param_list), unit="tfrecords", ncols=60))
 
   print("Generate %s set tfrecords over, cost time %06ds\n\n" % (dataset_name, time.time()-gen_s_time), flush=True)
 
@@ -143,12 +143,16 @@ def main():
     prepare_train_validation_test_set(train_name)
     print("Generate validation.meta...", flush=True)
     prepare_train_validation_test_set(validation_name)
-    print("Generate test.meta...", flush=True)
+    print("Generate test.meta...\n", flush=True)
     prepare_train_validation_test_set(test_name)
 
+    print("Write train set tfrecords...", flush=True)
     generate_tfrecords_using_meta(train_name)
+    print("Write validation set tfrecords...", flush=True)
     generate_tfrecords_using_meta(validation_name)
 
 
 if __name__ == "__main__":
   main()
+
+# python -m nn_se._1_preprocess
