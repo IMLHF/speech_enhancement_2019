@@ -33,7 +33,7 @@ def get_batch_inputs_from_dataset(datset_name):
     dataset = files.interleave(tf.data.TFRecordDataset,
                                cycle_length=1,
                                block_length=PARAM.batch_size,
-                               #  num_parallel_calls=1,
+                               # num_parallel_calls=1,
                                )
   else:  # shuffle
     dataset = files.interleave(tf.data.TFRecordDataset,
@@ -44,12 +44,6 @@ def get_batch_inputs_from_dataset(datset_name):
   if PARAM.shuffle_records:
     dataset = dataset.shuffle(PARAM.batch_size*10)
 
-  # dataset = dataset.apply(tf.data.experimental.map_and_batch(
-  #     map_func=parse_func,
-  #     batch_size=PARAM.batch_size,
-  #     num_parallel_calls=PARAM.n_processor_tfdata,
-  #     # num_parallel_batches=2,
-  # ))
   dataset = dataset.map(parse_func, num_parallel_calls=PARAM.n_processor_tfdata)
   dataset = dataset.batch(batch_size=PARAM.batch_size, drop_remainder=True)
   # dataset = dataset.prefetch(buffer_size=PARAM.batch_size)
