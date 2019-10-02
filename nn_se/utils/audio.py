@@ -24,11 +24,18 @@ def read_audio(file):
 def write_audio(file, data, sr):
   return sf.write(file, data, sr)
 
-def repeat_to_len(wave, repeat_len):
-  while len(wave) < repeat_len:
+def repeat_to_len(wave, repeat_len, random_trunc_long_wav=False):
+  wave_len = len(wave)
+  if random_trunc_long_wav and wave_len > repeat_len:
+    random_s = np.random.randint(wave_len-repeat_len+1)
+    wave = wave[random_s, random_s+repeat_len]
+    return wave
+
+  while wave_len < repeat_len:
     wave = np.tile(wave, 2)
   wave = wave[0:repeat_len]
   return wave
+
 
 def mix_wav_by_SNR(waveData, noise, snr):
   As = linalg.norm(waveData)
