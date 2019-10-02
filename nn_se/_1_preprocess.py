@@ -88,8 +88,8 @@ def _gen_tfrecords_minprocessor(params, meta_list, tfrecords_dir:Path):
       noise, n_sr = audio.read_audio(noise_dir)
       assert s_sr == n_sr, "sampling rate is not equal between speech and noise."
       wav_len = int(PARAM.train_val_wav_seconds*PARAM.sampling_rate)
-      speech = audio.repeat_to_len(speech, wav_len)
-      noise = audio.repeat_to_len(noise, wav_len)
+      speech = audio.repeat_to_len(speech, wav_len, True)
+      noise = audio.repeat_to_len(noise, wav_len, True)
       assert isinstance(speech, type(np.array(0))) and isinstance(noise, type(np.array(0))), "wav type error."
 
       tf_mixed, w_speech, w_noise = audio.mix_wav_by_SNR(speech, noise, float(snr))
