@@ -31,7 +31,7 @@ def repeat_to_len(wave, repeat_len, random_trunc_long_wav=False):
     wave = wave[random_s, random_s+repeat_len]
     return wave
 
-  while wave_len < repeat_len:
+  while len(wave) < repeat_len:
     wave = np.tile(wave, 2)
   wave = wave[0:repeat_len]
   return wave
