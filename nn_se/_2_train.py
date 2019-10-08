@@ -141,7 +141,7 @@ def main():
     sess.run(val_inputs.initializer)
     evalOutputs = eval_one_epoch(sess, val_model)
     val_loss_rel_impr = __relative_impr(evalOutputs_prev.avg_loss, evalOutputs.avg_loss, True)
-    misc_utils.print_log("     Validation> loss:%.4f, lr:%.2e, Cost time:%ds.\n" % (
+    misc_utils.print_log("     Validation> loss:%.4f, Cost time:%ds.\n" % (
         trainOutputs.avg_loss,
         trainOutputs.cost_time),
         train_log_file)
@@ -157,10 +157,10 @@ def main():
       msg = "     ckpt(%s) saved.\n" % ckpt_name
     else:
       model_abandon_time += 1
-      # tf.logging.set_verbosity(tf.logging.WARN)
+      # tf.compat.v1.logging.set_verbosity(tf.logging.WARN)
       train_model.saver.restore(sess,
                                 str(ckpt_dir.joinpath(best_ckpt_name)))
-      # tf.logging.set_verbosity(tf.logging.INFO)
+      # tf.compat.v1.logging.set_verbosity(tf.logging.INFO)
       msg = "     ckpt(%s) abandoned.\n" % ckpt_name
     misc_utils.print_log(msg, train_log_file)
 
@@ -182,5 +182,5 @@ def main():
     
 
 if __name__ == "__main__":
-  tf.logging.set_verbosity(tf.logging.ERROR)
+  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
   main()
