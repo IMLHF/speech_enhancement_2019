@@ -55,7 +55,7 @@ def train_one_epoch(sess, train_model, train_log_file):
                       cost_time=e_time-s_time,
                       lr=lr)
 
- 
+
 class EvalOutputs(
     collections.namedtuple("EvalOutputs",
                            ("avg_loss", "cost_time"))):
@@ -68,7 +68,7 @@ def eval_one_epoch(sess, val_model):
   i = 0
   while True:
     try:
-      (loss, 
+      (loss,
        mag_mse, spec_mse, wavL1, wavL2,
        ) = sess.run([val_model.loss,
                      val_model.mag_mse, val_model.spec_mse, val_model.clean_wav_L1_loss, val_model.clean_wav_L2_loss
@@ -144,13 +144,13 @@ def main():
     evalOutputs = eval_one_epoch(sess, val_model)
     val_loss_rel_impr = __relative_impr(evalOutputs_prev.avg_loss, evalOutputs.avg_loss, True)
     misc_utils.print_log("     Validation> loss:%.4f, Cost time:%ds.\n" % (
-        trainOutputs.avg_loss,
-        trainOutputs.cost_time),
+        evalOutputs.avg_loss,
+        evalOutputs.cost_time),
         train_log_file)
 
     # save or abandon ckpt
     ckpt_name = PARAM().config_name()+('_iter%04d_trloss%.4f_valloss%.4f_lr%.2e_duration%ds' % (
-        epoch, trainOutputs.avg_loss, evalOutputs.avg_loss, trainOutputs.lr, 
+        epoch, trainOutputs.avg_loss, evalOutputs.avg_loss, trainOutputs.lr,
         trainOutputs.cost_time+evalOutputs.cost_time))
     if val_loss_rel_impr > 0:
       train_model.saver.save(sess, str(ckpt_dir.joinpath(ckpt_name)))
@@ -181,7 +181,7 @@ def main():
   sess.close()
   msg = '################### Training Done. ###################\n'
   misc_utils.print_log(msg, train_log_file)
-    
+
 
 if __name__ == "__main__":
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
