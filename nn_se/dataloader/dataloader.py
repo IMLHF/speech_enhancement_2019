@@ -24,6 +24,9 @@ def parse_func(record_proto):
 
 
 def get_batch_inputs_from_dataset(datset_name):
+  """
+  dataset_name: PARAM.train_name, PARAM.val_name, PARAM.test_name
+  """
   tfrecords_list = Path(PARAM.root_dir).joinpath('datasets', datset_name, "tfrecords", "*.tfrecords")
   files = tf.data.Dataset.list_files(str(tfrecords_list))
   # files = files.take(FLAGS.PARAM.MAX_TFRECORD_FILES_USED)
@@ -53,4 +56,3 @@ def get_batch_inputs_from_dataset(datset_name):
                          clean=clean,
                          noise=noise,
                          mixed=mixed)
-
