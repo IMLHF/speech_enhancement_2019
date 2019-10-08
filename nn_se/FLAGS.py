@@ -36,7 +36,7 @@ class BaseConfig(StaticKey):
   n_processor_gen_tfrecords = 16
   tfrecords_num_pre_set = 160
   shuffle_records = True
-  batch_size = 144
+  batch_size = 64
   n_processor_tfdata = 4
 
   model_name = "CNN_RNN_REAL_MASK_MODEL"
