@@ -24,9 +24,10 @@ def show_all_variables():
     show_variables(model_vars)
 
 
-def print_log(msg, log_file: str):
-    time_stmp = "%s | " % time.ctime()
-    msg = time_stmp+msg
+def print_log(msg, log_file: str, no_time=False):
+    if not no_time:
+        time_stmp = "%s | " % time.ctime()
+        msg = time_stmp+msg
     print(msg, end='', flush=True)
     with open(log_file, 'a+') as f:
         f.write('msg')
