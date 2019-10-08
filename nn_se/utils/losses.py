@@ -6,7 +6,7 @@ def batch_time_fea_real_mse(y1, y2):
   y2: real, [batch, time, fft_dot]
   """
   loss = tf.square(y1-y2)
-  loss = tf.reduce_mean(tf.reduce_sum(loss, -1))
+  loss = tf.reduce_mean(tf.reduce_sum(loss, 0))
   return loss
 
 def batch_time_fea_complex_mse(y1, y2):
@@ -24,11 +24,11 @@ def batch_time_fea_complex_mse(y1, y2):
   return loss
 
 def batch_wav_L1_loss(y1, y2):
-  loss = tf.reduce_mean(tf.abs(y1-y2))
+  loss = tf.reduce_mean(tf.reduce_sum(tf.abs(y1-y2), 0))
   return loss
 
 def batch_wav_L2_loss(y1, y2):
-  loss = tf.reduce_mean(tf.square(y1-y2))
+  loss = tf.reduce_mean(tf.reduce_sum(tf.square(y1-y2), 0))
   return loss
 
 def batch_wav_cos_Lp_loss(y1, y2, p):

@@ -6,36 +6,34 @@ from ..utils import losses
 
 
 class CNN_RNN_REAL_MASK_MODEL(Module):
+  def forward(self, mixed_wav_batch):
+    outputs = self.real_networks_forward(mixed_wav_batch)
+    est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch = outputs
+    return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch
 
-  def __init__(self, clean_wav_batch, noise_wav_batch, mixed_wav_batch, behavior):
-    del noise_wav_batch
-    # labels
-    self.clean_wav_batch = clean_wav_batch
-    self.clean_spec_batch = tf.signal.stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
-    self.clean_mag_batch = tf.math.abs(self.clean_spec_batch) # mag label
+  def get_loss(self, forward_outputs):
+    est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch = forward_outputs
 
-    # nn forward
-    mixed_spec_batch = tf.signal.stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step)
-    mixed_mag_batch = tf.math.abs(mixed_spec_batch)
-    mixed_angle_batch = tf.math.angle(mixed_spec_batch)
-    mask = self.CNN_RNN_FC(mixed_mag_batch)
+    # region losses
+    ## frequency domain loss
+    self.mag_mse = losses.batch_time_fea_real_mse(est_clean_mag_batch, self.clean_mag_batch)
+    self.spec_mse = losses.batch_time_fea_complex_mse(est_clean_spec_batch, self.clean_spec_batch)
 
-    # estimates
-    self.est_clean_mag_batch = tf.multiply(mask, mixed_mag_batch) # mag estimated
-    self.est_clean_spec_batch = tf.multiply(self.est_clean_mag_batch, tf.exp(1j*mixed_angle_batch)) # complex
-    self.est_clean_wav_batch = tf.signal.inverse_stft(self.est_clean_spec_batch,PARAM.frame_length,PARAM.frame_step)
+    ## time domain loss
+    est_wav_len = tf.shape(est_clean_wav_batch)[-1]
+    clean_wav_batch = tf.slice(self.clean_wav_batch, [0,0], [-1, est_wav_len])
+    self.clean_wav_L1_loss = losses.batch_wav_L1_loss(est_clean_wav_batch, clean_wav_batch)
+    self.clean_wav_L2_loss = losses.batch_wav_L2_loss(est_clean_wav_batch, clean_wav_batch)
+    # engregion losses
 
-    # losses
-    self.mag_mse = losses.batch_time_fea_real_mse(self.est_clean_mag_batch, self.clean_mag_batch)
-    self.spec_mse = losses.batch_time_fea_complex_mse(self.est_clean_spec_batch, self.clean_spec_batch)
-    self.clean_wav_L1_loss = losses.batch_wav_L1_loss(self.est_clean_wav_batch, self.clean_wav_batch)
-    self.clean_wav_L2_loss = losses.batch_wav_L2_loss(self.est_clean_wav_batch, self.clean_wav_batch)
+    loss = 0
+    loss_names = PARAM.loss_name.split("+")
 
-    self.loss = 0
-    if PARAM.loss_name == "mag_mse":
-      self.loss = self.mag_mse
-
-
-
-
-
+    for name in loss_names:
+      loss += {
+        'mag_mse': self.mag_mse,
+        'spec_mse': self.spec_mse,
+        'clean_wav_L1_loss': self.clean_wav_L1_loss,
+        'clean_wav_L2_loss': self.clean_wav_L2_loss,
+      }[name]
+    return loss
