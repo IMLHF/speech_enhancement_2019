@@ -111,7 +111,8 @@ def main():
   g.finalize()
 
   config = tf.compat.v1.ConfigProto()
-  config.gpu_options.allow_growth = PARAM.GPU_RAM_ALLOW_GROWTH
+  # config.gpu_options.allow_growth = PARAM.GPU_RAM_ALLOW_GROWTH
+  config.gpu_options.per_process_gpu_memory_fraction = 0.45
   config.allow_soft_placement = False
   sess = tf.compat.v1.Session(config=config, graph=g)
   sess.run(init)
@@ -127,6 +128,7 @@ def main():
   assert PARAM.s_epoch > 0, 'start epoch > 0 is required.'
   model_abandon_time = 0
   for epoch in range(PARAM.s_epoch, PARAM.max_epoch+1):
+    print("\n\n", flush=True)
     misc_utils.print_log("  Epoch %03d:\n" % epoch, train_log_file)
 
     # train
