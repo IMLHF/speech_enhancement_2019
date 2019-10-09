@@ -156,7 +156,7 @@ def main():
 if __name__ == "__main__":
   misc_utils.check_tensorflow_version()
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-  os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
+  os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
   main()
 
 # python -m nn_se._1_preprocess
