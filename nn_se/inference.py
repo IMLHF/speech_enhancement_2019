@@ -42,7 +42,7 @@ def build_SMG(ckpt_name=None, batch_size=None, finalizeG=True):
     ckpt_dir = tf.train.get_checkpoint_state(str(misc_utils.ckpt_dir())).model_checkpoint_path
 
   if ckpt_dir:
-    misc_utils.print_log("Restore from " + ckpt_dir)
+    misc_utils.print_log("Restore from " + ckpt_dir + "\n")
     infer_model.saver.restore(sess, ckpt_dir)
 
   if finalizeG:
