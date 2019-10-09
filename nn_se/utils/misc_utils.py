@@ -7,6 +7,11 @@ from pathlib import Path
 
 from ..FLAGS import PARAM
 
+def test_records_save_dir():
+  exp_config_name_dir = exp_configName_dir()
+  return exp_config_name_dir.joinpath('test_records')
+
+
 def hparams_file_dir():
   exp_config_name_dir = exp_configName_dir()
   return exp_config_name_dir.joinpath('hparam')

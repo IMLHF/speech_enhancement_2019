@@ -19,7 +19,7 @@ class BaseConfig(StaticKey):
   $root_dir/datasets: datasets dir
   $root_dir/exp/$config_name/log: logs(include tensorboard log)
   $root_dir/exp/$config_name/ckpt: ckpt
-  $root_dir/exp/$config_name/decode: decode results
+  $root_dir/exp/$config_name/test_records: test results
   $root_dir/exp/$config_name/hparams
   '''
 
@@ -56,13 +56,13 @@ class BaseConfig(StaticKey):
   s_epoch = 1
   max_epoch = 100
   batches_to_logging = 300
-  
+
   max_model_abandon_time = 3
   use_lr_warmup = False # true: lr warmup; false: lr halving
   warmup_step = 4000. # for (use_lr_warmup == true)
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
-  
+
 
 
 

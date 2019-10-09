@@ -45,6 +45,8 @@ class Module(object):
                mixed_wav_batch,
                mode):
     del noise_wav_batch
+    self.mixed_wav_batch = mixed_wav_batch
+
     self.variables = variables
     self.mode = mode
 
@@ -61,10 +63,6 @@ class Module(object):
     if PARAM.use_lr_warmup:
       self._lr = misc_utils.noam_scheme(self._lr, self.global_step, warmup_steps=PARAM.warmup_steps)
 
-    # labels
-    self.clean_wav_batch = clean_wav_batch
-    self.clean_spec_batch = tf.signal.stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
-    self.clean_mag_batch = tf.math.abs(self.clean_spec_batch) # mag label
 
     # nn forward
     forward_outputs = self.forward(mixed_wav_batch)
@@ -76,6 +74,11 @@ class Module(object):
 
     if mode == PARAM.MODEL_INFER_KEY:
       return
+
+    # labels
+    self.clean_wav_batch = clean_wav_batch
+    self.clean_spec_batch = tf.signal.stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
+    self.clean_mag_batch = tf.math.abs(self.clean_spec_batch) # mag label
 
     self._loss = self.get_loss(forward_outputs)
 
@@ -162,6 +165,10 @@ class Module(object):
 
   def change_lr(self, sess, new_lr):
     sess.run(self.assign_lr, feed_dict={self.new_lr:new_lr})
+
+  @property
+  def mixed_wav_batch_in(self):
+    return self.mixed_wav_batch
 
   @property
   def global_step(self):
