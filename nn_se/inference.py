@@ -17,7 +17,7 @@ def build_SMG(ckpt_name=None, batch_size=None, finalizeG=True):
   g = tf.Graph()
   with g.as_default():
     with tf.name_scope("inputs"):
-      mixed_batch = tf.compat.v1.placeholder(tf.float32, shape=[batch_size,None], name='mixed_batch')
+      mixed_batch = tf.compat.v1.placeholder(tf.float32, shape=[batch_size, None], name='mixed_batch')
 
     ModelC = model_builder.get_model_class()
 
@@ -52,6 +52,6 @@ def build_SMG(ckpt_name=None, batch_size=None, finalizeG=True):
 
 def enhance_one_wav(smg: SMG, wav):
   wav_batch = np.array([wav], dtype=np.float32)
-  enhanced_wav_batch = smg.session.run([smg.model.est_clean_wav_batch], feed_dict={smg.model.mixed_wav_batch_in: wav_batch})
+  enhanced_wav_batch = smg.session.run(smg.model.est_clean_wav_batch, feed_dict={smg.model.mixed_wav_batch_in: wav_batch})
   enhanced_wav = enhanced_wav_batch[0]
   return enhanced_wav

@@ -103,18 +103,19 @@ class Module(object):
   def CNN_RNN_FC(self, mixed_mag_batch, training=False):
     mixed_mag_batch = tf.expand_dims(mixed_mag_batch, -1) # [batch, time, fft_dot, 1]
     outputs = mixed_mag_batch
+    _batch_size = tf.shape(outputs)[0]
 
     for conv2d in self.variables.conv2d_layers:
       outputs = conv2d(outputs)
-    outputs = tf.squeeze(outputs, [-1]) # [batcch, time, fft_dot]
+    outputs = tf.squeeze(outputs, [-1]) # [batch, time, fft_dot]
 
     # print(outputs.shape.as_list())
 
+    outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot])
     for blstm in self.variables.blstm_layers:
       outputs = blstm(outputs, training=training)
     # print(outputs.shape.as_list())
 
-    _batch_size = tf.shape(outputs)[0]
     outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL*2])
     outputs = self.variables.out_fc(outputs)
     outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot])
