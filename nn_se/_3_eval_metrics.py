@@ -3,6 +3,7 @@ import collections
 from pathlib import Path
 import os
 import numpy as np
+from tqdm import tqdm
 
 from .utils import misc_utils
 from .utils import audio
@@ -41,8 +42,9 @@ def eval_one_record(smg:SMG, clean_dir, noise_dir, mix_snr, save_dir=None):
   """
   assert Path(clean_dir).exists(), 'clean_dir not exist.'
   assert Path(noise_dir).exists(), 'noise_dir not exist.'
-  clean_wav = audio.read_audio(clean_dir)
-  noise_wav = audio.read_audio(noise_dir)
+  clean_wav, c_sr = audio.read_audio(clean_dir)
+  noise_wav, n_sr = audio.read_audio(noise_dir)
+  assert c_sr == n_sr and c_sr == PARAM.sampling_rate, 'Sample_rate error.'
   assert len(clean_wav) > 0 and len(noise_wav) > 0, 'clean or noise length is 0.'
 
   len_clean = len(clean_wav)
@@ -76,7 +78,7 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   smg = build_SMG()
 
   eval_ans_list = []
-  for clean_dir, noise_dir in clean_noise_pair_list: # TODO: use tqdm
+  for clean_dir, noise_dir in tqdm(clean_noise_pair_list, ncols=100, unit="test record"): # TODO: use tqdm
     eval_ans = eval_one_record(smg, clean_dir, noise_dir, mix_snr, save_dir)
     eval_ans_list.append(eval_ans)
 
@@ -112,15 +114,20 @@ def eval_testSet_by_meta(mix_SNR, save_test_records=False):
   if not save_test_records:
     test_records_save_dir = None
   else:
-    test_records_save_dir = str(misc_utils.test_records_save_dir())
+    _dir = misc_utils.test_records_save_dir()
+    test_records_save_dir = str(_dir)
+    if _dir.exists():
+      import shutil
+      shutil.rmtree(str(_dir))
+    _dir.mkdir()
   eval_testSet_by_list(meta_list, mix_SNR, test_records_save_dir)
 
 def main():
-  eval_testSet_by_meta(-5, True)
+  # eval_testSet_by_meta(-5, True)
   eval_testSet_by_meta(0, True)
-  eval_testSet_by_meta(5, True)
-  eval_testSet_by_meta(10)
-  eval_testSet_by_meta(15)
+  # eval_testSet_by_meta(5, True)
+  # eval_testSet_by_meta(10)
+  # eval_testSet_by_meta(15)
 
 if __name__ == "__main__":
   main()
