@@ -56,9 +56,10 @@ def eval_one_record(smg:SMG, clean_dir, noise_dir, mix_snr, save_dir=None):
 
   clean_dir_name = Path(clean_dir).stem
   noise_dir_name = Path(noise_dir).stem
-  audio.write_audio(os.path.join(save_dir, clean_dir_name+'.wav'), clean_wav, PARAM.sampling_rate)
-  audio.write_audio(os.path.join(save_dir, clean_dir_name+'_'+noise_dir_name+'.wav'), mixed_wav, PARAM.sampling_rate)
-  audio.write_audio(os.path.join(save_dir, clean_dir_name+'_enhanced.wav'), enhanced_wav, PARAM.sampling_rate)
+  if save_dir is not None:
+    audio.write_audio(os.path.join(save_dir, clean_dir_name+'.wav'), clean_wav, PARAM.sampling_rate)
+    audio.write_audio(os.path.join(save_dir, clean_dir_name+'_'+noise_dir_name+'.wav'), mixed_wav, PARAM.sampling_rate)
+    audio.write_audio(os.path.join(save_dir, clean_dir_name+'_enhanced.wav'), enhanced_wav, PARAM.sampling_rate)
 
   pesq_noisy = calc_pesq(clean_wav, mixed_wav, PARAM.sampling_rate)
   stoi_noisy = calc_stoi(clean_wav, mixed_wav, PARAM.sampling_rate)
