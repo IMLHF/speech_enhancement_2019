@@ -31,6 +31,7 @@ def train_one_epoch(sess, train_model, train_log_file):
   s_time = time.time()
   minbatch_time = time.time()
 
+  total_i = PARAM.n_train_set_records//PARAM.batch_size
   while True:
     try:
       (_, loss, lr, global_step
@@ -41,7 +42,9 @@ def train_one_epoch(sess, train_model, train_log_file):
                      ])
       tr_loss += loss
       i += 1
+      print("\rtrain: %d/%d" % (i, total_i), flush=True, end="")
       if i % PARAM.batches_to_logging == 0:
+        print("\r", end="")
         msg = "     Minbatch %04d: loss:%.4f, lr:%.2e, Cost time:%ds.\n" % (
                 i, tr_loss/i, lr, time.time()-minbatch_time,
               )
@@ -66,6 +69,7 @@ def eval_one_epoch(sess, val_model):
   val_s_time = time.time()
   total_loss = 0.0
   i = 0
+  total_i = PARAM.n_val_set_records//PARAM.batch_size
   while True:
     try:
       (loss,
@@ -76,9 +80,11 @@ def eval_one_epoch(sess, val_model):
       # print(loss, mag_mse, spec_mse, wavL1, wavL2, flush=True)
       total_loss += loss
       i += 1
+      print("\rvalidate: %d/%d" % (i, total_i), flush=True, end="")
     except tf.errors.OutOfRangeError:
       break
 
+  print("\r", end="")
   avg_loss = total_loss / i
   val_e_time = time.time()
   return EvalOutputs(avg_loss=avg_loss,
