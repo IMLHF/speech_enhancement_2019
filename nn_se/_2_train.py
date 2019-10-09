@@ -120,7 +120,7 @@ def main():
   # region validation before training
   sess.run(val_inputs.initializer)
   evalOutputs_prev = eval_one_epoch(sess, val_model)
-  misc_utils.print_log("\n\n", train_log_file)
+  misc_utils.print_log("\n\n", train_log_file, no_time=True)
   val_msg = "PRERUN.val> AVG.LOSS:%.4F, Cost itme:%.4Fs.\n" % (evalOutputs_prev.avg_loss,
                                                                evalOutputs_prev.cost_time)
   misc_utils.print_log(val_msg, train_log_file)
@@ -128,7 +128,7 @@ def main():
   assert PARAM.s_epoch > 0, 'start epoch > 0 is required.'
   model_abandon_time = 0
   for epoch in range(PARAM.s_epoch, PARAM.max_epoch+1):
-    misc_utils.print_log("\n\n", train_log_file)
+    misc_utils.print_log("\n\n", train_log_file, no_time=True)
     misc_utils.print_log("  Epoch %03d:\n" % epoch, train_log_file)
 
     # train
@@ -179,10 +179,12 @@ def main():
       break
 
   sess.close()
+  misc_utils.print_log("\n\n", train_log_file, no_time=True)
   msg = '################### Training Done. ###################\n'
   misc_utils.print_log(msg, train_log_file)
 
 
 if __name__ == "__main__":
+  misc_utils.check_tensorflow_version()
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
   main()

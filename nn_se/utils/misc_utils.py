@@ -2,6 +2,9 @@ import tensorflow as tf
 import sys
 import tensorflow.contrib.slim as slim
 import time
+from distutils import version
+
+from ..FLAGS import PARAM
 
 def noam_scheme(init_lr, global_step, warmup_steps=4000.):
     '''Noam scheme learning rate decay
@@ -31,3 +34,11 @@ def print_log(msg, log_file: str, no_time=False):
     print(msg, end='', flush=True)
     with open(log_file, 'a+') as f:
         f.write('msg')
+
+
+def check_tensorflow_version():
+  # LINT.IfChange
+  min_tf_version = PARAM.min_TF_version
+  # LINT.ThenChange(<pwd>/nmt/copy.bara.sky)
+  if not (version.LooseVersion(tf.__version__) == version.LooseVersion(min_tf_version)):
+    raise EnvironmentError("Tensorflow version must be '%s'" % min_tf_version)

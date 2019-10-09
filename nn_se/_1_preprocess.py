@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from .FLAGS import PARAM
 from .utils import audio
+from .utils import misc_utils
 
 """
 Generate metadata and tfrecords.
@@ -153,6 +154,7 @@ def main():
 
 
 if __name__ == "__main__":
+  misc_utils.check_tensorflow_version()
   main()
 
 # python -m nn_se._1_preprocess
