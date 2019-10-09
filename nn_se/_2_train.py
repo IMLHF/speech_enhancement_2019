@@ -89,6 +89,9 @@ def main():
   config_dir = Path(PARAM.root_dir).joinpath('exp', PARAM().config_name())
   train_log_file = config_dir.joinpath('log', 'train.log')
   ckpt_dir = config_dir.joinpath('ckpt')
+  hparam_file = config_dir.joinpath('hparam')
+  misc_utils.print_hparams()
+  misc_utils.save_hparams(str(hparam_file))
 
   if not train_log_file.parent.exists():
     os.makedirs(str(train_log_file.parent))

@@ -42,3 +42,44 @@ def check_tensorflow_version():
   # LINT.ThenChange(<pwd>/nmt/copy.bara.sky)
   if not (version.LooseVersion(tf.__version__) == version.LooseVersion(min_tf_version)):
     raise EnvironmentError("Tensorflow version must be '%s'" % min_tf_version)
+
+
+def save_hparams(f):
+  f = open(f, 'a+')
+  from .. import FLAGS
+  self_dict = FLAGS.PARAM.__dict__
+  self_dict_keys = self_dict.keys()
+  f.writelines('FLAGS.PARAM:\n')
+  supper_dict = FLAGS.BaseConfig.__dict__
+  for key in sorted(supper_dict.keys()):
+    if key in self_dict_keys:
+      f.write('%s:%s\n' % (key,self_dict[key]))
+    else:
+      f.write('%s:%s\n' % (key,supper_dict[key]))
+  f.write('--------------------------\n\n')
+
+  f.write('Short hparams:\n')
+  [f.write("%s:%s\n" % (key, self_dict[key])) for key in sorted(self_dict_keys)]
+  f.write('--------------------------\n\n')
+
+
+def print_hparams(short=True):
+  from .. import FLAGS
+  self_dict = FLAGS.PARAM.__dict__
+  self_dict_keys = self_dict.keys()
+  print('\n--------------------------\n')
+  print('Short hparams:')
+  [print("%s:%s" % (key, self_dict[key])) for key in sorted(self_dict_keys)]
+  print('--------------------------\n')
+  if not short:
+    print('FLAGS.PARAM:')
+    supper_dict = FLAGS.BaseConfig.__dict__
+    for key in sorted(supper_dict.keys()):
+      if key in self_dict_keys:
+        print('%s:%s' % (key,self_dict[key]))
+      else:
+        print('%s:%s' % (key,supper_dict[key]))
+    print('--------------------------\n')
+    print('Short hparams:')
+    [print("%s:%s" % (key, self_dict[key])) for key in sorted(self_dict_keys)]
+    print('--------------------------\n')
