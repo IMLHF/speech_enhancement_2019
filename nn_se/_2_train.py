@@ -89,11 +89,14 @@ def main():
   train_log_file = misc_utils.train_log_file_dir()
   ckpt_dir = misc_utils.ckpt_dir()
   hparam_file = misc_utils.hparams_file_dir()
+  if not train_log_file.parent.exists():
+    os.makedirs(str(train_log_file.parent))
+  if not ckpt_dir.exists():
+    os.mkdir(str(ckpt_dir))
+
   misc_utils.print_hparams()
   misc_utils.save_hparams(str(hparam_file))
 
-  if not train_log_file.parent.exists():
-    os.makedirs(str(train_log_file.parent))
   g = tf.Graph()
   with g.as_default():
     with tf.name_scope("inputs"):
