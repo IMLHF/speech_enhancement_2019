@@ -86,10 +86,9 @@ def eval_one_epoch(sess, val_model):
 
 
 def main():
-  config_dir = Path(PARAM.root_dir).joinpath('exp', PARAM().config_name())
-  train_log_file = config_dir.joinpath('log', 'train.log')
-  ckpt_dir = config_dir.joinpath('ckpt')
-  hparam_file = config_dir.joinpath('hparam')
+  train_log_file = misc_utils.train_log_file_dir()
+  ckpt_dir = misc_utils.ckpt_dir()
+  hparam_file = misc_utils.hparams_file_dir()
   misc_utils.print_hparams()
   misc_utils.save_hparams(str(hparam_file))
 

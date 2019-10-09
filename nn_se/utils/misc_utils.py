@@ -3,8 +3,33 @@ import sys
 import tensorflow.contrib.slim as slim
 import time
 from distutils import version
+from pathlib import Path
 
 from ..FLAGS import PARAM
+
+def hparams_file_dir():
+  exp_config_name_dir = exp_configName_dir()
+  return exp_config_name_dir.joinpath('hparam')
+
+
+def ckpt_dir():
+  exp_config_name_dir = exp_configName_dir()
+  return exp_config_name_dir.joinpath('ckpt')
+
+
+def train_log_file_dir():
+  log_dir_ = log_dir()
+  return log_dir_.joinpath('train.log')
+
+
+def log_dir():
+  exp_config_name_dir = exp_configName_dir()
+  return exp_config_name_dir.joinpath('log')
+
+
+def exp_configName_dir():
+  return Path(PARAM.root_dir).joinpath('exp', PARAM().config_name())
+
 
 def noam_scheme(init_lr, global_step, warmup_steps=4000.):
     '''Noam scheme learning rate decay
