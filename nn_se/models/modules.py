@@ -77,7 +77,7 @@ class Module(object):
 
     # labels
     self.clean_wav_batch = clean_wav_batch
-    self.clean_spec_batch = tf.signal.stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
+    self.clean_spec_batch = tf.signal.stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step, pad_end=True) # complex label
     self.clean_mag_batch = tf.math.abs(self.clean_spec_batch) # mag label
 
     self._loss = self.get_loss(forward_outputs)
