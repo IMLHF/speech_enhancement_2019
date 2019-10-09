@@ -48,7 +48,7 @@ def eval_one_record(smg:SMG, clean_dir, noise_dir, mix_snr, save_dir=None):
   assert len(clean_wav) > 0 and len(noise_wav) > 0, 'clean or noise length is 0.'
 
   len_clean = len(clean_wav)
-  noise_wav = audio.repeat_to_len(noise_wav, len_clean, True)
+  noise_wav = audio.repeat_to_len(noise_wav, len_clean, False)
   mixed_wav, w_clean, w_noise = audio.mix_wav_by_SNR(clean_wav, noise_wav, mix_snr)
   clean_wav = clean_wav * w_clean
   noise_wav = noise_wav * w_noise
