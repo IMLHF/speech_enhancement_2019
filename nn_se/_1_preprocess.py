@@ -110,7 +110,7 @@ def _gen_tfrecords_minprocessor(params, meta_list, tfrecords_dir:Path):
 
 
 def generate_tfrecords_using_meta(dataset_name):
-  set_root = Path(PARAM.root_dir).joinpath("datasets", dataset_name) # "/xx/datasets/train"
+  set_root = misc_utils.datasets_dir().joinpath(dataset_name) # "/xx/datasets/train"
   metaf = set_root.joinpath(dataset_name+".meta").open("r")
   meta_list = list(metaf.readlines())
   meta_list = [meta.strip() for meta in meta_list]

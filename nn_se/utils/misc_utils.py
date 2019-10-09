@@ -17,6 +17,11 @@ def ckpt_dir():
   return exp_config_name_dir.joinpath('ckpt')
 
 
+def test_log_file_dir():
+  log_dir_ = log_dir()
+  return log_dir_.joinpath('test.log')
+
+
 def train_log_file_dir():
   log_dir_ = log_dir()
   return log_dir_.joinpath('train.log')
@@ -29,6 +34,10 @@ def log_dir():
 
 def exp_configName_dir():
   return Path(PARAM.root_dir).joinpath('exp', PARAM().config_name())
+
+
+def datasets_dir():
+  return Path(PARAM.root_dir).joinpath("datasets")
 
 
 def noam_scheme(init_lr, global_step, warmup_steps=4000.):
