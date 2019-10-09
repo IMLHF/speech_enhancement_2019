@@ -122,7 +122,7 @@ class Module(object):
 
 
   def real_networks_forward(self, mixed_wav_batch):
-    mixed_spec_batch = tf.signal.stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step)
+    mixed_spec_batch = tf.signal.stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step, pad_end=True)
     mixed_mag_batch = tf.math.abs(mixed_spec_batch)
     mixed_angle_batch = tf.math.angle(mixed_spec_batch)
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
@@ -130,7 +130,9 @@ class Module(object):
 
     est_clean_mag_batch = tf.multiply(mask, mixed_mag_batch) # mag estimated
     est_clean_spec_batch = tf.cast(est_clean_mag_batch, tf.dtypes.complex64) * tf.exp(1j*tf.cast(mixed_angle_batch, tf.dtypes.complex64)) # complex
-    est_clean_wav_batch = tf.signal.inverse_stft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
+    _mixed_wav_len = tf.shape(mixed_wav_batch)[-1]
+    _est_clean_wav_batch = tf.signal.inverse_stft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
+    est_clean_wav_batch = tf.slice(_est_clean_wav_batch, [0,0], [-1, _mixed_wav_len]) # if stft.pad_end=True, so est_wav may be longger than mixed.
 
     return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch
 
