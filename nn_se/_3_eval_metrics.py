@@ -78,9 +78,12 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   smg = build_SMG()
 
   eval_ans_list = []
+  # for clean_dir, noise_dir in clean_noise_pair_list:
   for clean_dir, noise_dir in tqdm(clean_noise_pair_list, ncols=100, unit="test record"): # TODO: use tqdm
     eval_ans = eval_one_record(smg, clean_dir, noise_dir, mix_snr, save_dir)
     eval_ans_list.append(eval_ans)
+    # print(eval_ans)
+    # print("________________________________________________________________________________________________________________")
 
   pesq_noisy_vec = np.array([eval_ans_.pesq_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
   stoi_noisy_vec = np.array([eval_ans_.stoi_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
@@ -120,7 +123,8 @@ def eval_testSet_by_meta(mix_SNR, save_test_records=False):
       import shutil
       shutil.rmtree(str(_dir))
     _dir.mkdir()
-  eval_testSet_by_list(meta_list, mix_SNR, test_records_save_dir)
+  tmp = eval_testSet_by_list(meta_list, mix_SNR, test_records_save_dir)
+  misc_utils.print_log(str(tmp), test_log_file)
 
 def main():
   # eval_testSet_by_meta(-5, True)
@@ -130,4 +134,7 @@ def main():
   # eval_testSet_by_meta(15)
 
 if __name__ == "__main__":
+  misc_utils.check_tensorflow_version()
+  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+  os.environ["TF_CPP_MIN_LOG_LEVEL"] = "1"
   main()
