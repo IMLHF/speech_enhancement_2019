@@ -39,11 +39,11 @@ class Module(object):
   speech enhancement base
   """
   def __init__(self,
+               mode,
                variables: Variables,
-               clean_wav_batch,
-               noise_wav_batch,
                mixed_wav_batch,
-               mode):
+               clean_wav_batch=None,
+               noise_wav_batch=None):
     del noise_wav_batch
     self.mixed_wav_batch = mixed_wav_batch
 

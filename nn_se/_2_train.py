@@ -106,9 +106,9 @@ def main():
     ModelC = model_builder.get_model_class()
 
     variables = modules.Variables()
-    train_model = ModelC(variables, train_inputs.clean, train_inputs.noise, train_inputs.mixed, PARAM.MODEL_TRAIN_KEY)
+    train_model = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean, train_inputs.noise)
     # tf.compat.v1.get_variable_scope().reuse_variables()
-    val_model = ModelC(variables,val_inputs.clean, val_inputs.noise, val_inputs.mixed, PARAM.MODEL_VALIDATE_KEY)
+    val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, val_inputs.mixed, variables,val_inputs.clean, val_inputs.noise)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
                     tf.compat.v1.local_variables_initializer())
     misc_utils.show_variables(train_model.save_variables)

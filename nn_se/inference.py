@@ -17,14 +17,12 @@ def build_SMG(ckpt_name=None, batch_size=None, finalizeG=True):
   g = tf.Graph()
   with g.as_default():
     with tf.name_scope("inputs"):
-      clean_batch = tf.compat.v1.placeholder(tf.float32, shape=[batch_size,None], name='clean_batch')
-      noise_batch = tf.compat.v1.placeholder(tf.float32, shape=[batch_size,None], name='noise_batch')
       mixed_batch = tf.compat.v1.placeholder(tf.float32, shape=[batch_size,None], name='mixed_batch')
 
     ModelC = model_builder.get_model_class()
 
     variables = modules.Variables()
-    infer_model = ModelC(variables, clean_batch, noise_batch, mixed_batch, PARAM.MODEL_INFER_KEY)
+    infer_model = ModelC(PARAM.MODEL_INFER_KEY, variables, mixed_batch)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
                     tf.compat.v1.local_variables_initializer())
     misc_utils.show_variables(infer_model.save_variables)
