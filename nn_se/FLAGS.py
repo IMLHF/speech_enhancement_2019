@@ -40,7 +40,12 @@ class BaseConfig(StaticKey):
   n_processor_tfdata = 4
 
   model_name = "CNN_RNN_REAL_MASK_MODEL"
-  loss_name = "mag_mse"
+
+  """
+  @param loss_name:
+  real_net_mag_mse, real_net_spec_mse, real_net_clean_wav_L1_loss, real_net_clean_wav_L1_loss
+  """
+  loss_name = ["real_net_mag_mse"]
   frame_length = 512
   frame_step = 256
   no_cnn = False
@@ -59,13 +64,14 @@ class BaseConfig(StaticKey):
 
   max_model_abandon_time = 3
   use_lr_warmup = True # true: lr warmup; false: lr halving
-  warmup_step = 4000. # for (use_lr_warmup == true)
+  warmup_steps = 4000. # for (use_lr_warmup == true)
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
 
 
 class debug(BaseConfig):
-  pass
+  blstm_layers = 2
+  no_cnn = True
 
 class nn_se_warmup(BaseConfig): # done 15123
   """
@@ -73,11 +79,21 @@ class nn_se_warmup(BaseConfig): # done 15123
   """
   pass
 
-class nn_se_lr001(BaseConfig): # running 15123
+class nn_se_lr001(BaseConfig): # done 15123
   """
   cnn1lstm
   """
   learning_rate = 0.001
+
+class nn_se_lr01(BaseConfig): # running 15123
+  """
+  cnn1lstm
+  """
+  learning_rate = 0.01
+
+class nn_se_realNet_complexMse(BaseConfig): # running 15123
+  learning_rate = 0.001
+  loss_name = ["real_net_mag_mse", "real_net_spec_mse"]
 
 class p40(BaseConfig):
   n_processor_gen_tfrecords = 56
@@ -104,4 +120,4 @@ class p40_nn_se_cnnonly(p40): # pendding p40
   """
   blstm_layers = 0
 
-PARAM = debug
+PARAM = nn_se_realNet_complexMse
