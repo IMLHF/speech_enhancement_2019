@@ -17,6 +17,7 @@ class Variables(object):
       self._lr = tf.compat.v1.get_variable('lr', dtype=tf.float32, trainable=False,
                                            initializer=tf.constant(PARAM.learning_rate))
 
+    # CNN
     conv2d_1 = tf.keras.layers.Conv2D(8, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
     conv2d_2 = tf.keras.layers.Conv2D(16, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
     conv2d_3 = tf.keras.layers.Conv2D(8, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
@@ -25,6 +26,7 @@ class Variables(object):
     if PARAM.no_cnn:
       self.conv2d_layers = []
 
+    # BLSTM
     self.N_RNN_CELL = 512
     self.blstm_layers = []
     for i in range(1, PARAM.blstm_layers+1):
@@ -33,6 +35,7 @@ class Variables(object):
       blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm, merge_mode='concat', name='blstm_%d' % i)
       self.blstm_layers.append(blstm)
 
+    # FC
     self.out_fc = tf.keras.layers.Dense(PARAM.fft_dot, name='out_fc')
 
 
@@ -79,7 +82,7 @@ class Module(object):
 
     # labels
     self.clean_wav_batch = clean_wav_batch
-    self.clean_spec_batch = tf.signal.stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step, pad_end=True) # complex label
+    self.clean_spec_batch = misc_utils.tf_batch_stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
     self.clean_mag_batch = tf.math.abs(self.clean_spec_batch) # mag label
 
     self._loss = self.get_loss(forward_outputs)
@@ -126,7 +129,8 @@ class Module(object):
 
 
   def real_networks_forward(self, mixed_wav_batch):
-    mixed_spec_batch = tf.signal.stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step, pad_end=True)
+    mixed_spec_batch = misc_utils.tf_batch_stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step)
+    self.debug_mixed_spec_batch = mixed_spec_batch
     mixed_mag_batch = tf.math.abs(mixed_spec_batch)
     mixed_angle_batch = tf.math.angle(mixed_spec_batch)
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
@@ -135,7 +139,7 @@ class Module(object):
     est_clean_mag_batch = tf.multiply(mask, mixed_mag_batch) # mag estimated
     est_clean_spec_batch = tf.cast(est_clean_mag_batch, tf.dtypes.complex64) * tf.exp(1j*tf.cast(mixed_angle_batch, tf.dtypes.complex64)) # complex
     _mixed_wav_len = tf.shape(mixed_wav_batch)[-1]
-    _est_clean_wav_batch = tf.signal.inverse_stft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
+    _est_clean_wav_batch = misc_utils.tf_batch_istft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
     est_clean_wav_batch = tf.slice(_est_clean_wav_batch, [0,0], [-1, _mixed_wav_len]) # if stft.pad_end=True, so est_wav may be longger than mixed.
 
     return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch

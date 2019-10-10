@@ -8,6 +8,15 @@ import os
 
 from ..FLAGS import PARAM
 
+def tf_batch_istft(batch):
+  istft = tf.signal.inverse_stft(batch, PARAM.frame_length, PARAM.frame_step)
+  return istft
+
+
+def tf_batch_stft(batch):
+  stft = tf.signal.stft(batch, PARAM.frame_length, PARAM.frame_step, pad_end=True)
+  return stft
+
 
 def initial_run(config_name):
   assert config_name == PARAM().config_name(), (
