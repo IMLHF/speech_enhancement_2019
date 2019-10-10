@@ -1,11 +1,13 @@
+import os
+# os.environ["OMP_NUM_THREADS"] = "1"
 import tensorflow as tf
 import collections
 from pathlib import Path
-import os
 import numpy as np
 from tqdm import tqdm
 from functools import partial
 from multiprocessing import Pool
+import sys
 
 from .utils import misc_utils
 from .utils import audio
@@ -15,7 +17,7 @@ from .inference import SMG
 from .utils.assess.core import calc_pesq, calc_stoi, calc_sdr
 from .FLAGS import PARAM
 
-test_processor = 3
+test_processor = 6
 smg = None
 
 
@@ -90,9 +92,10 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   job = Pool(test_processor).imap(func, clean_noise_pair_list)
   eval_ans_list = list(tqdm(job, "Testing", len(clean_noise_pair_list), unit="test record", ncols=60))
 
-  # # for clean_dir, noise_dir in clean_noise_pair_list:
-  # for clean_dir, noise_dir in tqdm(clean_noise_pair_list, ncols=100, unit="test record"): # TODO: use tqdm
-  #   eval_ans = eval_one_record(smg, clean_dir, noise_dir, mix_snr, save_dir)
+  # eval_ans_list = []
+  # # for clean_dir_and_noise_dir in clean_noise_pair_list:
+  # for clean_dir_and_noise_dir in tqdm(clean_noise_pair_list, ncols=100, unit="test record"):
+  #   eval_ans = eval_one_record(clean_dir_and_noise_dir, mix_snr, save_dir)
   #   eval_ans_list.append(eval_ans)
   #   # print(eval_ans)
   #   # print("________________________________________________________________________________________________________________")
@@ -146,10 +149,11 @@ def main():
   # eval_testSet_by_meta(15)
 
 if __name__ == "__main__":
+  if len(sys.argv) > 1:
+    test_processor = int(sys.argv[1])
   misc_utils.check_tensorflow_version()
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
   os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-  os.environ["OMP_NUM_THREADS"] = "1"
   misc_utils.print_hparams()
   main()
-  # OMP_NUM_THREADS=1
+  # OMP_NUM_THREADS=1 python xx._3_eval_metrics 3
