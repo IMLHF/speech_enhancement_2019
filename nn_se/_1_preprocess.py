@@ -7,6 +7,7 @@ import multiprocessing
 import tensorflow as tf
 from functools import partial
 from tqdm import tqdm
+import sys
 
 from .FLAGS import PARAM
 from .utils import audio
@@ -154,9 +155,9 @@ def main():
 
 
 if __name__ == "__main__":
-  misc_utils.check_tensorflow_version()
-  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-  os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+  misc_utils.initial_run(sys.argv[0].split("/")[-2])
   main()
-
-# python -m nn_se._1_preprocess
+  """
+  run cmd:
+  `python xx._1_preprocess`
+  """

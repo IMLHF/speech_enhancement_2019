@@ -149,11 +149,12 @@ def main():
   # eval_testSet_by_meta(15)
 
 if __name__ == "__main__":
+  misc_utils.initial_run(sys.argv[0].split("/")[-2])
+
   if len(sys.argv) > 1:
     test_processor = int(sys.argv[1])
-  misc_utils.check_tensorflow_version()
-  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-  os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-  misc_utils.print_hparams()
   main()
-  # OMP_NUM_THREADS=1 python xx._3_eval_metrics 3
+  """
+  run cmd:
+  `OMP_NUM_THREADS=1 python xx._3_eval_metrics 3`
+  """

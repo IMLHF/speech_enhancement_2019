@@ -4,6 +4,7 @@ import numpy as numpy
 import time
 import collections
 from pathlib import Path
+import sys
 
 
 from .models import model_builder
@@ -101,7 +102,6 @@ def main():
   if not ckpt_dir.exists():
     os.mkdir(str(ckpt_dir))
 
-  misc_utils.print_hparams()
   misc_utils.save_hparams(str(hparam_file))
 
   g = tf.Graph()
@@ -198,7 +198,9 @@ def main():
 
 
 if __name__ == "__main__":
-  misc_utils.check_tensorflow_version()
-  tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-  os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+  misc_utils.initial_run(sys.argv[0].split("/")[-2])
   main()
+  """
+  run cmd:
+  `OMP_NUM_THREADS=1 python xx._2_train`
+  """
