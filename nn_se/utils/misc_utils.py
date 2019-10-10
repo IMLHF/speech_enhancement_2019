@@ -66,13 +66,14 @@ def show_all_variables():
   show_variables(model_vars)
 
 
-def print_log(msg, log_file=None, no_time=False):
+def print_log(msg, log_file=None, no_time=False, no_prt=False):
   if log_file is not None:
     log_file = str(log_file)
   if not no_time:
       time_stmp = "%s | " % time.ctime()
       msg = time_stmp+msg
-  print(msg, end='', flush=True)
+  if not no_prt:
+    print(msg, end='', flush=True)
   if log_file:
     with open(log_file, 'a+') as f:
         f.write(msg)

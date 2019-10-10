@@ -25,7 +25,7 @@ def build_SMG(ckpt_name=None, batch_size=None, finalizeG=True):
     infer_model = ModelC(PARAM.MODEL_INFER_KEY, variables, mixed_batch)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
                     tf.compat.v1.local_variables_initializer())
-    misc_utils.show_variables(infer_model.save_variables)
+    # misc_utils.show_variables(infer_model.save_variables)
     # misc_utils.show_variables(val_model.save_variables)
   g.finalize()
 
@@ -42,7 +42,8 @@ def build_SMG(ckpt_name=None, batch_size=None, finalizeG=True):
     ckpt_dir = tf.train.get_checkpoint_state(str(misc_utils.ckpt_dir())).model_checkpoint_path
 
   if ckpt_dir:
-    misc_utils.print_log("Restore from " + ckpt_dir + "\n")
+    test_log_file = misc_utils.test_log_file_dir()
+    misc_utils.print_log("Restore from " + ckpt_dir + "\n", log_file=str(test_log_file), no_prt=True)
     infer_model.saver.restore(sess, ckpt_dir)
 
   if finalizeG:

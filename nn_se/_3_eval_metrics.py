@@ -4,6 +4,8 @@ from pathlib import Path
 import os
 import numpy as np
 from tqdm import tqdm
+from functools import partial
+from multiprocessing import Pool
 
 from .utils import misc_utils
 from .utils import audio
@@ -12,6 +14,9 @@ from .inference import enhance_one_wav
 from .inference import SMG
 from .utils.assess.core import calc_pesq, calc_stoi, calc_sdr
 from .FLAGS import PARAM
+
+test_processor = 3
+smg = None
 
 
 class TestsetEvalAns(
@@ -36,10 +41,14 @@ class RecordEvalAns(
   pass
 
 
-def eval_one_record(smg:SMG, clean_dir, noise_dir, mix_snr, save_dir=None):
+def eval_one_record(clean_dir_and_noise_dir, mix_snr, save_dir=None):
   """
   if save_dir is not None: save clean, noise and mixed in save_dir.
   """
+  global smg
+  if smg is None:
+    smg = build_SMG()
+  clean_dir, noise_dir = clean_dir_and_noise_dir
   assert Path(clean_dir).exists(), 'clean_dir not exist.'
   assert Path(noise_dir).exists(), 'noise_dir not exist.'
   clean_wav, c_sr = audio.read_audio(clean_dir)
@@ -76,15 +85,17 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   """
   if save_dir is not None: save clean, noise and mixed in save_dir.
   """
-  smg = build_SMG()
 
-  eval_ans_list = []
-  # for clean_dir, noise_dir in clean_noise_pair_list:
-  for clean_dir, noise_dir in tqdm(clean_noise_pair_list, ncols=100, unit="test record"): # TODO: use tqdm
-    eval_ans = eval_one_record(smg, clean_dir, noise_dir, mix_snr, save_dir)
-    eval_ans_list.append(eval_ans)
-    # print(eval_ans)
-    # print("________________________________________________________________________________________________________________")
+  func = partial(eval_one_record, mix_snr=mix_snr, save_dir=save_dir)
+  job = Pool(test_processor).imap(func, clean_noise_pair_list)
+  eval_ans_list = list(tqdm(job, "Testing", len(clean_noise_pair_list), unit="test record", ncols=60))
+
+  # # for clean_dir, noise_dir in clean_noise_pair_list:
+  # for clean_dir, noise_dir in tqdm(clean_noise_pair_list, ncols=100, unit="test record"): # TODO: use tqdm
+  #   eval_ans = eval_one_record(smg, clean_dir, noise_dir, mix_snr, save_dir)
+  #   eval_ans_list.append(eval_ans)
+  #   # print(eval_ans)
+  #   # print("________________________________________________________________________________________________________________")
 
   pesq_noisy_vec = np.array([eval_ans_.pesq_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
   stoi_noisy_vec = np.array([eval_ans_.stoi_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
@@ -138,5 +149,7 @@ if __name__ == "__main__":
   misc_utils.check_tensorflow_version()
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
   os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+  os.environ["OMP_NUM_THREADS"] = "1"
   misc_utils.print_hparams()
   main()
+  # OMP_NUM_THREADS=1
