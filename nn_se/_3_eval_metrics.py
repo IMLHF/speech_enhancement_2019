@@ -17,7 +17,7 @@ from .inference import SMG
 from .utils.assess.core import calc_pesq, calc_stoi, calc_sdr
 from .FLAGS import PARAM
 
-test_processor = 6
+test_processor = 1
 smg = None
 
 
@@ -34,7 +34,8 @@ class TestsetEvalAns(
 
 class RecordEvalAns(
     collections.namedtuple("TestsetEvalAns",
-                           ("pesq_noisy",
+                           ("clean_wav_name", "noise_wav_name",
+                            "pesq_noisy",
                             "stoi_noisy",
                             "sdr_noisy",
                             "pesq_enhanced",
@@ -79,7 +80,8 @@ def eval_one_record(clean_dir_and_noise_dir, mix_snr, save_dir=None):
   stoi_enhanced = calc_stoi(clean_wav, enhanced_wav, PARAM.sampling_rate)
   sdr_enhanced = calc_sdr(clean_wav, enhanced_wav, PARAM.sampling_rate)
 
-  return RecordEvalAns(pesq_noisy=pesq_noisy, stoi_noisy=stoi_noisy, sdr_noisy=sdr_noisy,
+  return RecordEvalAns(clean_wav_name=Path(clean_dir).name, noise_wav_name=Path(noise_dir).name,
+                       pesq_noisy=pesq_noisy, stoi_noisy=stoi_noisy, sdr_noisy=sdr_noisy,
                        pesq_enhanced=pesq_enhanced, stoi_enhanced=stoi_enhanced, sdr_enhanced=sdr_enhanced)
 
 
@@ -100,6 +102,17 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   #   # print(eval_ans)
   #   # print("________________________________________________________________________________________________________________")
 
+  # write log
+  test_log_file = misc_utils.test_log_file_dir(mix_snr)
+  misc_utils.print_log("write log", str(test_log_file), no_prt=True)
+  for eval_ans in eval_ans_list:
+    msg = ""
+    msg += eval_ans.clean_wav_name+" | "+eval_ans.noise_wav_name + (" |  PESQi: %.2f >>>\n" % (eval_ans.pesq_enhanced-eval_ans.pesq_noisy))
+    msg += ("       pesq: %.2f -> %.2f | stoi: %.2f -> %.2f | sdr: %.2f -> %.2f\n" % (eval_ans.pesq_noisy, eval_ans.pesq_enhanced,
+                                                                                      eval_ans.stoi_noisy, eval_ans.stoi_enhanced,
+                                                                                      eval_ans.sdr_noisy, eval_ans.sdr_enhanced))
+    misc_utils.print_log(msg, str(test_log_file), no_prt=True, no_time=True)
+
   pesq_noisy_vec = np.array([eval_ans_.pesq_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
   stoi_noisy_vec = np.array([eval_ans_.stoi_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
   sdr_noisy_vec = np.array([eval_ans_.sdr_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
@@ -107,12 +120,22 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   stoi_enhanced_vec = np.array([eval_ans_.stoi_enhanced for eval_ans_ in eval_ans_list], dtype=np.float32)
   sdr_enhanced_vec = np.array([eval_ans_.sdr_enhanced for eval_ans_ in eval_ans_list], dtype=np.float32)
 
-  return TestsetEvalAns(pesq_noisy_mean=np.mean(pesq_noisy_vec), pesq_noisy_var=np.var(pesq_noisy_vec),
-                        stoi_noisy_mean=np.mean(stoi_noisy_vec), stoi_noisy_var=np.var(stoi_noisy_vec),
-                        sdr_noisy_mean=np.mean(sdr_noisy_vec), sdr_noisy_var=np.var(sdr_noisy_vec),
-                        pesq_enhanced_mean=np.mean(pesq_enhanced_vec), pesq_enhanced_var=np.var(pesq_enhanced_vec),
-                        stoi_enhanced_mean=np.mean(stoi_enhanced_vec), stoi_enhanced_var=np.var(stoi_enhanced_vec),
-                        sdr_enhanced_mean=np.mean(sdr_enhanced_vec), sdr_enhanced_var=np.var(sdr_enhanced_vec))
+  testsetEvalAns = TestsetEvalAns(pesq_noisy_mean=np.mean(pesq_noisy_vec), pesq_noisy_var=np.var(pesq_noisy_vec),
+                                  stoi_noisy_mean=np.mean(stoi_noisy_vec), stoi_noisy_var=np.var(stoi_noisy_vec),
+                                  sdr_noisy_mean=np.mean(sdr_noisy_vec), sdr_noisy_var=np.var(sdr_noisy_vec),
+                                  pesq_enhanced_mean=np.mean(pesq_enhanced_vec), pesq_enhanced_var=np.var(pesq_enhanced_vec),
+                                  stoi_enhanced_mean=np.mean(stoi_enhanced_vec), stoi_enhanced_var=np.var(stoi_enhanced_vec),
+                                  sdr_enhanced_mean=np.mean(sdr_enhanced_vec), sdr_enhanced_var=np.var(sdr_enhanced_vec))
+
+  misc_utils.print_log("\n\nSNR(%d) test over.\n" % mix_snr, test_log_file)
+  # misc_utils.print_log(str(testsetEvalAns)+"\n", test_log_file)
+  msg = ("SNR(%d) pesq: %.3f ± %.3f -> %.3f ± %.3f\nstoi: %.3f ± %.3f -> %.3f ± %.3f\nsdr: %.3f ± %.3f -> %.3f ± %.3f\n" % (
+      mix_snr,
+      testsetEvalAns.pesq_noisy_mean, testsetEvalAns.pesq_noisy_var, testsetEvalAns.pesq_enhanced_mean, testsetEvalAns.pesq_enhanced_var,
+      testsetEvalAns.stoi_noisy_mean, testsetEvalAns.stoi_noisy_var, testsetEvalAns.stoi_enhanced_mean, testsetEvalAns.stoi_enhanced_var,
+      testsetEvalAns.sdr_noisy_mean, testsetEvalAns.sdr_noisy_var, testsetEvalAns.sdr_enhanced_mean, testsetEvalAns.sdr_enhanced_var))
+  misc_utils.print_log(msg, test_log_file, no_time=True)
+  return testsetEvalAns, msg
 
 
 def eval_testSet_by_meta(mix_SNR, save_test_records=False):
@@ -122,7 +145,7 @@ def eval_testSet_by_meta(mix_SNR, save_test_records=False):
 
   set_root = misc_utils.datasets_dir().joinpath(PARAM.test_name) # "/xx/datasets/train"
   meta_dir = set_root.joinpath(PARAM.test_name+".meta")
-  test_log_file = str(misc_utils.test_log_file_dir())
+  test_log_file = str(misc_utils.test_log_file_dir(mix_SNR))
   misc_utils.print_log("Using meta '%s'\n" % str(meta_dir), test_log_file)
 
   metaf = meta_dir.open("r")
@@ -138,8 +161,8 @@ def eval_testSet_by_meta(mix_SNR, save_test_records=False):
       import shutil
       shutil.rmtree(str(_dir))
     _dir.mkdir()
-  tmp = eval_testSet_by_list(meta_list, mix_SNR, test_records_save_dir)
-  misc_utils.print_log(str(tmp)+"\n", test_log_file)
+  eval_testSet_by_list(meta_list, mix_SNR, test_records_save_dir)
+
 
 def main():
   # eval_testSet_by_meta(-5, True)

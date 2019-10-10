@@ -33,9 +33,10 @@ def ckpt_dir():
   return exp_config_name_dir.joinpath('ckpt')
 
 
-def test_log_file_dir():
+def test_log_file_dir(mix_snr):
+  str_snr = "test_snr(+%02d).log" % mix_snr if mix_snr >= 0 else "test_snr(-%02d).log" % mix_snr
   log_dir_ = log_dir()
-  return log_dir_.joinpath('test.log')
+  return log_dir_.joinpath(str_snr)
 
 
 def train_log_file_dir():
