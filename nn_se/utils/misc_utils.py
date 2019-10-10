@@ -28,6 +28,11 @@ def initial_run(config_name):
   print_hparams()
 
 
+def test_code_out_dir():
+  _dir = Path(PARAM.root_dir).joinpath("exp", "test")
+  return _dir
+
+
 def test_records_save_dir():
   exp_config_name_dir = exp_configName_dir()
   return exp_config_name_dir.joinpath('test_records')
