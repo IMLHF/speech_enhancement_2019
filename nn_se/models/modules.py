@@ -130,7 +130,6 @@ class Module(object):
 
   def real_networks_forward(self, mixed_wav_batch):
     mixed_spec_batch = misc_utils.tf_batch_stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step)
-    self.debug_mixed_spec_batch = mixed_spec_batch
     mixed_mag_batch = tf.math.abs(mixed_spec_batch)
     mixed_angle_batch = tf.math.angle(mixed_spec_batch)
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
