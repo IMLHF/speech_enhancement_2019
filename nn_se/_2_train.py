@@ -52,6 +52,7 @@ def train_one_epoch(sess, train_model, train_log_file):
         misc_utils.print_log(msg, train_log_file)
     except tf.errors.OutOfRangeError:
       break
+  print("\r", end="")
   e_time = time.time()
   tr_loss /= i
   return TrainOutputs(avg_loss=tr_loss,
@@ -131,7 +132,7 @@ def main():
   # region validation before training
   sess.run(val_inputs.initializer)
   evalOutputs_prev = eval_one_epoch(sess, val_model)
-  misc_utils.print_log("\n\n", train_log_file, no_time=True)
+  misc_utils.print_log("                   \n\n", train_log_file, no_time=True)
   val_msg = "PRERUN.val> AVG.LOSS:%.4F, Cost itme:%.4Fs.\n" % (evalOutputs_prev.avg_loss,
                                                                evalOutputs_prev.cost_time)
   misc_utils.print_log(val_msg, train_log_file)
