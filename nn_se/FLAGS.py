@@ -43,6 +43,8 @@ class BaseConfig(StaticKey):
   loss_name = "mag_mse"
   frame_length = 512
   frame_step = 256
+  norm_stft = False
+  stft_max = 50 # for norm_stft=True: stft_out=stft/stft_max,  est_stft_out=f(stft_out), est_stft=est_stft_out*stft_max
   no_cnn = False
   blstm_layers = 1
   fft_dot = 257

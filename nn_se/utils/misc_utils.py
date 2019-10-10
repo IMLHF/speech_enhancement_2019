@@ -8,14 +8,19 @@ import os
 
 from ..FLAGS import PARAM
 
-def tf_batch_istft(batch):
-  istft = tf.signal.inverse_stft(batch, PARAM.frame_length, PARAM.frame_step)
-  return istft
 
-
-def tf_batch_stft(batch):
-  stft = tf.signal.stft(batch, PARAM.frame_length, PARAM.frame_step, pad_end=True)
+def tf_batch_stft(batch_wav, frame_length, frame_step):
+  stft = tf.signal.stft(batch_wav, frame_length, frame_step, pad_end=True)
+  if PARAM.norm_stft:
+    stft = tf.divide(stft, PARAM.stft_max)
   return stft
+
+
+def tf_batch_istft(batch_stft, frame_length, frame_step):
+  if PARAM.norm_stft:
+    batch_stft = tf.multiply(batch_stft, PARAM.stft_max)
+  istft = tf.signal.inverse_stft(batch_stft, frame_length, frame_step)
+  return istft
 
 
 def initial_run(config_name):
