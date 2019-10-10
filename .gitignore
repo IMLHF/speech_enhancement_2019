@@ -1,3 +1,4 @@
 exp
 *.wav
 *.npy
+__pycache__
