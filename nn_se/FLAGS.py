@@ -58,7 +58,7 @@ class BaseConfig(StaticKey):
   batches_to_logging = 300
 
   max_model_abandon_time = 3
-  use_lr_warmup = False # true: lr warmup; false: lr halving
+  use_lr_warmup = True # true: lr warmup; false: lr halving
   warmup_step = 4000. # for (use_lr_warmup == true)
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
@@ -71,13 +71,12 @@ class nn_se_warmup(BaseConfig): # done 15123
   """
   cnn1lstm
   """
-  use_lr_warmup = True
+  pass
 
 class nn_se_lr001(BaseConfig): # running 15123
   """
   cnn1lstm
   """
-  use_lr_warmup = True
   learning_rate = 0.001
 
 class p40(BaseConfig):
@@ -85,7 +84,6 @@ class p40(BaseConfig):
   n_processor_tfdata = 8
   GPU_PARTION = 0.47
   root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
-  use_lr_warmup = True
 
 class p40_nn_se_cnn2lstm(p40): # running p40
   """
