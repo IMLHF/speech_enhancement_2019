@@ -48,8 +48,6 @@ class BaseConfig(StaticKey):
   fft_dot = 257
   max_keep_ckpt = 30
   learning_rate = 0.0001
-  use_lr_warmup = False
-  warmup_steps = 4000
   max_gradient_norm = 5.0
 
   GPU_RAM_ALLOW_GROWTH = True
@@ -64,6 +62,10 @@ class BaseConfig(StaticKey):
   warmup_step = 4000. # for (use_lr_warmup == true)
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
+
+
+class debug(BaseConfig):
+  pass
 
 class nn_se_warmup(BaseConfig): # done 15123
   """
@@ -80,8 +82,8 @@ class nn_se_lr001(BaseConfig): # running 15123
 
 class p40(BaseConfig):
   n_processor_gen_tfrecords = 56
-  n_processor_tfdata = 56
-  GPU_PARTION = 0.225
+  n_processor_tfdata = 8
+  GPU_PARTION = 0.47
   root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
   use_lr_warmup = True
 
@@ -98,10 +100,10 @@ class p40_nn_se_2lstmonly(p40): # running p40
   blstm_layers = 2
   no_cnn = True
 
-class p40_nn_se_cnnonly(p40): # runnnig p40
+class p40_nn_se_cnnonly(p40): # pendding p40
   """
   cnn only
   """
   blstm_layers = 0
 
-PARAM = p40_nn_se_cnn2lstm
+PARAM = debug
