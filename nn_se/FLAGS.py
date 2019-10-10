@@ -43,6 +43,7 @@ class BaseConfig(StaticKey):
   loss_name = "mag_mse"
   frame_length = 512
   frame_step = 256
+  no_cnn = False
   blstm_layers = 1
   fft_dot = 257
   max_keep_ckpt = 30
@@ -52,6 +53,7 @@ class BaseConfig(StaticKey):
   max_gradient_norm = 5.0
 
   GPU_RAM_ALLOW_GROWTH = True
+  GPU_PARTION = 0.45
 
   s_epoch = 1
   max_epoch = 100
@@ -63,9 +65,43 @@ class BaseConfig(StaticKey):
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
 
+class nn_se_warmup(BaseConfig): # done 15123
+  """
+  cnn1lstm
+  """
+  use_lr_warmup = True
 
+class nn_se_lr001(BaseConfig): # running 15123
+  """
+  cnn1lstm
+  """
+  use_lr_warmup = True
+  learning_rate = 0.001
 
+class p40(BaseConfig):
+  n_processor_gen_tfrecords = 56
+  n_processor_tfdata = 56
+  GPU_PARTION = 0.225
+  root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
+  use_lr_warmup = True
 
+class p40_nn_se_cnn2lstm(p40): # running p40
+  """
+  cnn2lstm
+  """
+  blstm_layers = 2
 
+class p40_nn_se_2lstmonly(p40): # running p40
+  """
+  2lstm only
+  """
+  blstm_layers = 2
+  no_cnn = True
 
-PARAM = BaseConfig
+class p40_nn_se_cnnonly(p40): # runnnig p40
+  """
+  cnn only
+  """
+  blstm_layers = 0
+
+PARAM = p40_nn_se_cnn2lstm

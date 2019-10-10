@@ -124,7 +124,7 @@ def main():
 
   config = tf.compat.v1.ConfigProto()
   # config.gpu_options.allow_growth = PARAM.GPU_RAM_ALLOW_GROWTH
-  config.gpu_options.per_process_gpu_memory_fraction = 0.45
+  config.gpu_options.per_process_gpu_memory_fraction = PARAM.GPU_PARTION
   config.allow_soft_placement = False
   sess = tf.compat.v1.Session(config=config, graph=g)
   sess.run(init)

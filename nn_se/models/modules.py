@@ -22,6 +22,8 @@ class Variables(object):
     conv2d_3 = tf.keras.layers.Conv2D(8, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
     conv2d_4 = tf.keras.layers.Conv2D(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
     self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
+    if PARAM.no_cnn:
+      self.conv2d_layers = []
 
     self.N_RNN_CELL = 512
     self.blstm_layers = []
@@ -107,7 +109,8 @@ class Module(object):
 
     for conv2d in self.variables.conv2d_layers:
       outputs = conv2d(outputs)
-    outputs = tf.squeeze(outputs, [-1]) # [batch, time, fft_dot]
+    if len(self.variables.conv2d_layers) > 0:
+      outputs = tf.squeeze(outputs, [-1]) # [batch, time, fft_dot]
 
     # print(outputs.shape.as_list())
 
