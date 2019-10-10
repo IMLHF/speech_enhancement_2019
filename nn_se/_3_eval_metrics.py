@@ -120,22 +120,23 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   stoi_enhanced_vec = np.array([eval_ans_.stoi_enhanced for eval_ans_ in eval_ans_list], dtype=np.float32)
   sdr_enhanced_vec = np.array([eval_ans_.sdr_enhanced for eval_ans_ in eval_ans_list], dtype=np.float32)
 
-  testsetEvalAns = TestsetEvalAns(pesq_noisy_mean=np.mean(pesq_noisy_vec), pesq_noisy_var=np.var(pesq_noisy_vec),
-                                  stoi_noisy_mean=np.mean(stoi_noisy_vec), stoi_noisy_var=np.var(stoi_noisy_vec),
-                                  sdr_noisy_mean=np.mean(sdr_noisy_vec), sdr_noisy_var=np.var(sdr_noisy_vec),
-                                  pesq_enhanced_mean=np.mean(pesq_enhanced_vec), pesq_enhanced_var=np.var(pesq_enhanced_vec),
-                                  stoi_enhanced_mean=np.mean(stoi_enhanced_vec), stoi_enhanced_var=np.var(stoi_enhanced_vec),
-                                  sdr_enhanced_mean=np.mean(sdr_enhanced_vec), sdr_enhanced_var=np.var(sdr_enhanced_vec))
+  testAns = TestsetEvalAns(pesq_noisy_mean=np.mean(pesq_noisy_vec), pesq_noisy_var=np.var(pesq_noisy_vec),
+                           stoi_noisy_mean=np.mean(stoi_noisy_vec), stoi_noisy_var=np.var(stoi_noisy_vec),
+                           sdr_noisy_mean=np.mean(sdr_noisy_vec), sdr_noisy_var=np.var(sdr_noisy_vec),
+                           pesq_enhanced_mean=np.mean(pesq_enhanced_vec), pesq_enhanced_var=np.var(pesq_enhanced_vec),
+                           stoi_enhanced_mean=np.mean(stoi_enhanced_vec), stoi_enhanced_var=np.var(stoi_enhanced_vec),
+                           sdr_enhanced_mean=np.mean(sdr_enhanced_vec), sdr_enhanced_var=np.var(sdr_enhanced_vec))
 
-  misc_utils.print_log("\n\nSNR(%d) test over.\n" % mix_snr, test_log_file)
-  # misc_utils.print_log(str(testsetEvalAns)+"\n", test_log_file)
-  msg = ("SNR(%d) pesq: %.3f ± %.3f -> %.3f ± %.3f\nstoi: %.3f ± %.3f -> %.3f ± %.3f\nsdr: %.3f ± %.3f -> %.3f ± %.3f\n" % (
-      mix_snr,
-      testsetEvalAns.pesq_noisy_mean, testsetEvalAns.pesq_noisy_var, testsetEvalAns.pesq_enhanced_mean, testsetEvalAns.pesq_enhanced_var,
-      testsetEvalAns.stoi_noisy_mean, testsetEvalAns.stoi_noisy_var, testsetEvalAns.stoi_enhanced_mean, testsetEvalAns.stoi_enhanced_var,
-      testsetEvalAns.sdr_noisy_mean, testsetEvalAns.sdr_noisy_var, testsetEvalAns.sdr_enhanced_mean, testsetEvalAns.sdr_enhanced_var))
+  misc_utils.print_log("SNR(%d) test over.\n\n" % mix_snr, test_log_file)
+  # misc_utils.print_log(str(testAns)+"\n", test_log_file)
+  msg = ("SNR(%d) test result>\n"
+         " pesq: %.3f ± %.3f -> %.3f ± %.3f\n stoi: %.3f ± %.3f -> %.3f ± %.3f\n sdr: %.3f ± %.3f -> %.3f ± %.3f\n" % (
+             mix_snr,
+             testAns.pesq_noisy_mean, testAns.pesq_noisy_var, testAns.pesq_enhanced_mean, testAns.pesq_enhanced_var,
+             testAns.stoi_noisy_mean, testAns.stoi_noisy_var, testAns.stoi_enhanced_mean, testAns.stoi_enhanced_var,
+             testAns.sdr_noisy_mean, testAns.sdr_noisy_var, testAns.sdr_enhanced_mean, testAns.sdr_enhanced_var))
   misc_utils.print_log(msg, test_log_file, no_time=True)
-  return testsetEvalAns, msg
+  return testAns, msg
 
 
 def eval_testSet_by_meta(mix_SNR, save_test_records=False):
