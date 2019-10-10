@@ -185,13 +185,14 @@ def main():
 
     # stop criterion
     if epoch >= PARAM.max_epoch or model_abandon_time >= PARAM.max_model_abandon_time:
+      misc_utils.print_log("\n\n", train_log_file, no_time=True)
       msg = "finished, too small learning rate %e.\n" % trainOutputs.lr
       tf.logging.info(msg)
       misc_utils.print_log(msg, train_log_file)
       break
 
   sess.close()
-  misc_utils.print_log("\n\n", train_log_file, no_time=True)
+  misc_utils.print_log("\n", train_log_file, no_time=True)
   msg = '################### Training Done. ###################\n'
   misc_utils.print_log(msg, train_log_file)
 
