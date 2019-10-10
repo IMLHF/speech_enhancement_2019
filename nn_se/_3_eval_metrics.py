@@ -104,13 +104,13 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
 
   # write log
   test_log_file = misc_utils.test_log_file_dir(mix_snr)
-  misc_utils.print_log("write log", str(test_log_file), no_prt=True)
+  misc_utils.print_log("write log\n", str(test_log_file), no_prt=True)
   for eval_ans in eval_ans_list:
     msg = ""
     msg += eval_ans.clean_wav_name+" | "+eval_ans.noise_wav_name + (" |  PESQi: %.2f >>>\n" % (eval_ans.pesq_enhanced-eval_ans.pesq_noisy))
-    msg += ("       pesq: %.2f -> %.2f | stoi: %.2f -> %.2f | sdr: %.2f -> %.2f\n" % (eval_ans.pesq_noisy, eval_ans.pesq_enhanced,
-                                                                                      eval_ans.stoi_noisy, eval_ans.stoi_enhanced,
-                                                                                      eval_ans.sdr_noisy, eval_ans.sdr_enhanced))
+    msg += ("       pesq: %.2f -> %.2f | stoi: %.2f -> %.2f | sdr: %.2f -> %.2f\n\n" % (eval_ans.pesq_noisy, eval_ans.pesq_enhanced,
+                                                                                        eval_ans.stoi_noisy, eval_ans.stoi_enhanced,
+                                                                                        eval_ans.sdr_noisy, eval_ans.sdr_enhanced))
     misc_utils.print_log(msg, str(test_log_file), no_prt=True, no_time=True)
 
   pesq_noisy_vec = np.array([eval_ans_.pesq_noisy for eval_ans_ in eval_ans_list], dtype=np.float32)
@@ -129,7 +129,7 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
 
   misc_utils.print_log("SNR(%d) test over.\n\n" % mix_snr, test_log_file)
   # misc_utils.print_log(str(testAns)+"\n", test_log_file)
-  msg = ("SNR(%d) test result>\n"
+  msg = ("SNR(%d) test result >\n"
          " pesq: %.3f ± %.3f -> %.3f ± %.3f\n stoi: %.3f ± %.3f -> %.3f ± %.3f\n sdr: %.3f ± %.3f -> %.3f ± %.3f\n" % (
              mix_snr,
              testAns.pesq_noisy_mean, testAns.pesq_noisy_var, testAns.pesq_enhanced_mean, testAns.pesq_enhanced_var,
