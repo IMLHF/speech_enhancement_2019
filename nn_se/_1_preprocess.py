@@ -159,5 +159,5 @@ if __name__ == "__main__":
   main()
   """
   run cmd:
-  `python xx._1_preprocess`
+  `python -m xx._1_preprocess`
   """

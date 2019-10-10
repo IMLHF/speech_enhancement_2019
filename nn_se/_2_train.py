@@ -202,5 +202,5 @@ if __name__ == "__main__":
   main()
   """
   run cmd:
-  `OMP_NUM_THREADS=1 python xx._2_train`
+  `OMP_NUM_THREADS=1 python -m xx._2_train`
   """

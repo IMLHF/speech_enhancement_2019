@@ -11,7 +11,7 @@ from ..FLAGS import PARAM
 
 def initial_run(config_name):
   assert config_name == PARAM().config_name(), (
-      "config name error: %s|%s." % (config_name, PARAM().config_name()))
+      "config name error: dir.%s|FLAG.%s." % (config_name, PARAM().config_name()))
   check_tensorflow_version()
   tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
   os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"

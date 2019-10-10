@@ -139,7 +139,7 @@ def eval_testSet_by_meta(mix_SNR, save_test_records=False):
       shutil.rmtree(str(_dir))
     _dir.mkdir()
   tmp = eval_testSet_by_list(meta_list, mix_SNR, test_records_save_dir)
-  misc_utils.print_log(str(tmp), test_log_file)
+  misc_utils.print_log(str(tmp)+"\n", test_log_file)
 
 def main():
   # eval_testSet_by_meta(-5, True)
@@ -156,5 +156,5 @@ if __name__ == "__main__":
   main()
   """
   run cmd:
-  `OMP_NUM_THREADS=1 python xx._3_eval_metrics 3`
+  `OMP_NUM_THREADS=1 python -m xx._3_eval_metrics 3`
   """
