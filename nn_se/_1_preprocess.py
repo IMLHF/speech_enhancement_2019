@@ -94,17 +94,14 @@ def _gen_tfrecords_minprocessor(params, meta_list, tfrecords_dir:Path):
       noise = audio.repeat_to_len(noise, wav_len, True)
       assert isinstance(speech, type(np.array(0))) and isinstance(noise, type(np.array(0))), "wav type error."
 
-      tf_mixed, w_speech, w_noise = audio.mix_wav_by_SNR(speech, noise, float(snr))
+      tf_mixed, w_speech, _ = audio.mix_wav_by_SNR(speech, noise, float(snr))
       tf_mixed = np.array(tf_mixed, dtype=np.float32)
       tf_speech = np.array(speech*w_speech, dtype=np.float32)
-      tf_noise = np.array(noise*w_noise, dtype=np.float32)
-      assert len(tf_speech)==len(tf_noise) and len(tf_speech)==wav_len, "tf_wav len error."
-      assert len(tf_mixed)==wav_len, "tf_wav len error. 2."
+      assert len(tf_speech)==len(tf_mixed) and len(tf_speech)==wav_len, "tf_wav len error."
 
       record = tf.train.Example(
           features=tf.train.Features(
               feature={'clean': tf.train.Feature(float_list=tf.train.FloatList(value=tf_speech)),
-                       'noise': tf.train.Feature(float_list=tf.train.FloatList(value=tf_noise)),
                        'mixed': tf.train.Feature(float_list=tf.train.FloatList(value=tf_mixed))}))
       writer.write(record.SerializeToString())
     writer.flush()

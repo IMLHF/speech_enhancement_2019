@@ -8,7 +8,7 @@ from ..FLAGS import PARAM
 
 class DataSetsOutputs(
     collections.namedtuple("DataSetOutputs",
-                           ("initializer", "clean", "noise", "mixed"))):
+                           ("initializer", "clean", "mixed"))):
   pass
 
 
@@ -16,11 +16,10 @@ def parse_func(record_proto):
   wav_len = int(PARAM.sampling_rate*PARAM.train_val_wav_seconds)
   features = {
       'clean': tf.io.FixedLenFeature([wav_len], tf.float32),
-      'noise': tf.io.FixedLenFeature([wav_len], tf.float32),
       'mixed': tf.io.FixedLenFeature([wav_len], tf.float32)
   }
   record = tf.io.parse_single_example(record_proto, features=features)
-  return record['clean'], record['noise'], record['mixed']
+  return record['clean'], record['mixed']
 
 
 def get_batch_inputs_from_dataset(datset_name):
@@ -51,8 +50,7 @@ def get_batch_inputs_from_dataset(datset_name):
   dataset = dataset.batch(batch_size=PARAM.batch_size, drop_remainder=True)
   # dataset = dataset.prefetch(buffer_size=PARAM.batch_size)
   dataset_iter = tf.compat.v1.data.make_initializable_iterator(dataset)
-  clean, noise, mixed = dataset_iter.get_next()
+  clean, mixed = dataset_iter.get_next()
   return DataSetsOutputs(initializer=dataset_iter.initializer,
                          clean=clean,
-                         noise=noise,
                          mixed=mixed)
