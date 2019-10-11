@@ -122,11 +122,12 @@ class Module(object):
     # BLSTM
     for blstm in self.variables.blstm_layers:
       outputs = blstm(outputs, training=training)
-    # print(outputs.shape.as_list())
-    if len(self.variables.blstm_layers) > 0:
-      outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL*2])
 
     # FC
+    if len(self.variables.blstm_layers) > 0:
+      outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL*2])
+    else:
+      outputs = tf.reshape(outputs, [-1, PARAM.fft_dot])
     outputs = self.variables.out_fc(outputs)
     outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot])
     return outputs
