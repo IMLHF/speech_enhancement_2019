@@ -44,11 +44,12 @@ def train_one_epoch(sess, train_model, train_log_file):
                      ])
       tr_loss += loss
       i += 1
-      print("\rtrain: %d/%d, cost %ds   " % (i, total_i, time.time()-one_batch_time), flush=True, end="")
+      print("\rtrain: %d/%d, cost %.2fs         " % (i, total_i, time.time()-one_batch_time),
+            flush=True, end="")
       one_batch_time = time.time()
       if i % PARAM.batches_to_logging == 0:
         print("\r", end="")
-        msg = "     Minbatch %04d: loss:%.4f, lr:%.2e, Cost time:%.2fs.\n" % (
+        msg = "     Minbatch %04d: loss:%.4f, lr:%.2e, Cost time:%ds.\n" % (
                 i, tr_loss/i, lr, time.time()-minbatch_time,
               )
         minbatch_time = time.time()
@@ -88,7 +89,8 @@ def eval_one_epoch(sess, val_model):
       # print("\n", loss, real_net_mag_mse, real_net_spec_mse, real_net_wavL1, real_net_wavL2, flush=True)
       total_loss += loss
       i += 1
-      print("\rvalidate: %d/%d, cost %.2fs" % (i, total_i, time.time()-ont_batch_time), flush=True, end="")
+      print("\rvalidate: %d/%d, cost %.2fs          " % (i, total_i, time.time()-ont_batch_time),
+            flush=True, end="")
       ont_batch_time = time.time()
     except tf.errors.OutOfRangeError:
       break
