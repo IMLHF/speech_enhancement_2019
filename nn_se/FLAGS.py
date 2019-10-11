@@ -30,7 +30,7 @@ class BaseConfig(StaticKey):
   n_val_set_records = 7200
   n_test_set_records = 3600
   train_val_snr = [-5, 15]
-  train_val_wav_seconds = 5.0
+  train_val_wav_seconds = 3.0
 
   sampling_rate = 8000
 
@@ -61,7 +61,7 @@ class BaseConfig(StaticKey):
   max_gradient_norm = 5.0
 
   GPU_RAM_ALLOW_GROWTH = True
-  GPU_PARTION = 0.15
+  GPU_PARTION = 0.45
 
   s_epoch = 1
   max_epoch = 100

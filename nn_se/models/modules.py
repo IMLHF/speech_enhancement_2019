@@ -18,22 +18,35 @@ class Variables(object):
                                            initializer=tf.constant(PARAM.learning_rate))
 
     # CNN
-    conv2d_1 = tf.keras.layers.Conv2D(8, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
-    conv2d_2 = tf.keras.layers.Conv2D(16, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
-    conv2d_3 = tf.keras.layers.Conv2D(8, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
+    conv2d_1 = tf.keras.layers.Conv2D(16, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
+    conv2d_2 = tf.keras.layers.Conv2D(32, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
+    conv2d_3 = tf.keras.layers.Conv2D(16, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
     conv2d_4 = tf.keras.layers.Conv2D(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
     self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
     if PARAM.no_cnn:
       self.conv2d_layers = []
 
     # BLSTM
-    self.N_RNN_CELL = 512
+    self.N_RNN_CELL = 256
     self.blstm_layers = []
     for i in range(1, PARAM.blstm_layers+1):
       forward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, return_sequences=True, name='fwlstm_%d' % i)
       backward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
-      blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm, merge_mode='concat', name='blstm_%d' % i)
+      blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
+                                            merge_mode='concat', name='blstm_%d' % i)
       self.blstm_layers.append(blstm)
+    # self.blstm_layers = []
+    # if PARAM.blstm_layers > 0:
+    #   forward_lstm = tf.keras.layers.RNN(
+    #       [tf.keras.layers.LSTMCell(
+    #           self.N_RNN_CELL, dropout=0.2, name="lstm_%d" % i) for i in range(PARAM.blstm_layers)],
+    #       return_sequences=True, name="fwlstm")
+    #   backward_lstm = tf.keras.layers.RNN(
+    #       [tf.keras.layers.LSTMCell(
+    #           self.N_RNN_CELL, dropout=0.2, name="lstm_%d" % i) for i in range(PARAM.blstm_layers)],
+    #       return_sequences=True, name="bwlstm", go_backwards=True)
+    #   self.blstm_layers.append(tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
+    #                                                          merge_mode='concat', name='blstm'))
 
     # FC
     self.out_fc = tf.keras.layers.Dense(PARAM.fft_dot, name='out_fc')

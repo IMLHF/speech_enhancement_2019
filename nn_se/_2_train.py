@@ -31,6 +31,7 @@ def train_one_epoch(sess, train_model, train_log_file):
   tr_loss, i, lr = 0.0, 0, -1
   s_time = time.time()
   minbatch_time = time.time()
+  one_batch_time = time.time()
 
   total_i = PARAM.n_train_set_records//PARAM.batch_size
   while True:
@@ -43,7 +44,8 @@ def train_one_epoch(sess, train_model, train_log_file):
                      ])
       tr_loss += loss
       i += 1
-      print("\rtrain: %d/%d" % (i, total_i), flush=True, end="")
+      print("\rtrain: %d/%d, cost %ds   " % (i, total_i, time.time()-one_batch_time), flush=True, end="")
+      one_batch_time = time.time()
       if i % PARAM.batches_to_logging == 0:
         print("\r", end="")
         msg = "     Minbatch %04d: loss:%.4f, lr:%.2e, Cost time:%ds.\n" % (
@@ -125,8 +127,8 @@ def main():
   g.finalize()
 
   config = tf.compat.v1.ConfigProto()
-  config.gpu_options.allow_growth = PARAM.GPU_RAM_ALLOW_GROWTH
-  # config.gpu_options.per_process_gpu_memory_fraction = PARAM.GPU_PARTION
+  # config.gpu_options.allow_growth = PARAM.GPU_RAM_ALLOW_GROWTH
+  config.gpu_options.per_process_gpu_memory_fraction = PARAM.GPU_PARTION
   config.allow_soft_placement = False
   sess = tf.compat.v1.Session(config=config, graph=g)
   sess.run(init)
