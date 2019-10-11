@@ -18,23 +18,24 @@ def test_dataloader_py():
 
 
 def wav_through_stft_istft():
+  step = 64
   dataset_dir = misc_utils.datasets_dir()
   testdata_dir = dataset_dir.joinpath(PARAM.test_name)
   wav_dir = testdata_dir.joinpath("speech", "p265", "p265_002.wav")
   wav, sr = audio.read_audio(str(wav_dir))
   wav_batch = np.array([wav], dtype=np.float32)
-  spec = misc_utils.tf_batch_stft(wav_batch, PARAM.frame_length, 128)
+  spec = misc_utils.tf_batch_stft(wav_batch, PARAM.frame_length, step)
 
   mag = tf.math.abs(spec)
   phase = tf.math.angle(spec)
   spec2 = tf.cast(mag, tf.dtypes.complex64) * tf.exp(1j*tf.cast(phase, tf.dtypes.complex64))
 
-  wav2 = misc_utils.tf_batch_istft(spec2, PARAM.frame_length, 128)
+  wav2 = misc_utils.tf_batch_istft(spec2, PARAM.frame_length, step)
 
   sess = tf.compat.v1.Session()
   wav_np = sess.run(wav2)
   wav_np = wav_np[0]
-  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_reconstructed_step128.wav"),wav_np,PARAM.sampling_rate)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_reconstructed_step%d.wav" % step),wav_np,PARAM.sampling_rate)
 
 
 def wav_through_stft_istft_noreconstructed():
