@@ -30,8 +30,10 @@ class Variables(object):
     self.N_RNN_CELL = 256
     self.blstm_layers = []
     for i in range(1, PARAM.blstm_layers+1):
-      forward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, return_sequences=True, name='fwlstm_%d' % i)
-      backward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
+      forward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2,
+                                          return_sequences=True, name='fwlstm_%d' % i)
+      backward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2,
+                                           return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
       blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
                                             merge_mode='concat', name='blstm_%d' % i)
       self.blstm_layers.append(blstm)
