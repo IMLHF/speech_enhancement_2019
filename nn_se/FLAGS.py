@@ -25,13 +25,14 @@ class BaseConfig(StaticKey):
 
   min_TF_version = "1.14.0"
 
+  # _1_preprocess param
   n_train_set_records = 72000
   n_val_set_records = 7200
   n_test_set_records = 3600
   train_val_snr = [-5, 15]
   train_val_wav_seconds = 5.0
 
-  sampling_rate = 16000
+  sampling_rate = 8000
 
   n_processor_gen_tfrecords = 16
   tfrecords_num_pre_set = 160
@@ -39,6 +40,10 @@ class BaseConfig(StaticKey):
   batch_size = 64
   n_processor_tfdata = 4
 
+  """
+  @param model_name:
+  CNN_RNN_REAL_MASK_MODEL, COMPLEX_CNN_COMPLEX_MASK_MODEL, REAL_CNN_COMPLEX_MASK_MODEL
+  """
   model_name = "CNN_RNN_REAL_MASK_MODEL"
 
   """
@@ -46,17 +51,17 @@ class BaseConfig(StaticKey):
   real_net_mag_mse, real_net_spec_mse, real_net_wav_L1, real_net_wav_L2
   """
   loss_name = ["real_net_mag_mse"]
-  frame_length = 512
-  frame_step = 256
+  frame_length = 256
+  frame_step = 64
   no_cnn = False
   blstm_layers = 1
-  fft_dot = 257
+  fft_dot = 129
   max_keep_ckpt = 30
-  learning_rate = 0.0001
+  learning_rate = 0.001
   max_gradient_norm = 5.0
 
   GPU_RAM_ALLOW_GROWTH = True
-  GPU_PARTION = 0.45
+  GPU_PARTION = 0.15
 
   s_epoch = 1
   max_epoch = 100
@@ -73,35 +78,32 @@ class debug(BaseConfig):
   blstm_layers = 2
   no_cnn = True
 
-class nn_se_warmup(BaseConfig): # done 15123
+class nn_se_lr0001(BaseConfig): # running 15123
+  """
+  cnn1blstm
+  """
+  learning_rate = 0.0001
+
+class nn_se_lr0003(BaseConfig): # running 15123
+  """
+  cnn1blstm
+  """
+  learning_rate = 0.0003
+
+class nn_se_lr001(BaseConfig): # pendding 15123
+  """
+  cnn1blstm
+  """
+  learning_rate = 0.001
+
+class nn_se_lr003(BaseConfig): # pendding 15123
   """
   cnn1lstm
   """
-  pass
+  learning_rate = 0.003
 
-class nn_se_lr001(BaseConfig): # done 15123
-  """
-  cnn1lstm
-  """
-  learning_rate = 0.001
 
-class nn_se_lr01(BaseConfig): # done 15123
-  """
-  cnn1lstm
-  """
-  learning_rate = 0.01
-
-class nn_se_realNet_complexMse(BaseConfig): # done 15123
-  learning_rate = 0.001
-  loss_name = ["real_net_mag_mse", "real_net_spec_mse"]
-
-class nn_se_realNet_complexMseOnly(BaseConfig): # running 15123
-  learning_rate = 0.001
-  loss_name = ["real_net_spec_mse"]
-
-class nn_se_realNet_wavL1(BaseConfig): # running 15123
-  learning_rate = 0.001
-  loss_name = ["real_net_wav_L1"]
+# add loss weight
 
 """####################################################################################
 #######################################################################################
@@ -138,4 +140,4 @@ class p40_nn_se_cnnonly(p40): # running p40
   """
   blstm_layers = 0
 
-PARAM = nn_se_realNet_wavL1
+PARAM = nn_se_lr0001
