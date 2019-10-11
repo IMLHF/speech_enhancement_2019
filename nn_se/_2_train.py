@@ -79,7 +79,7 @@ def eval_one_epoch(sess, val_model):
        real_net_wavL1, real_net_wavL2,
        ) = sess.run([val_model.loss,
                      val_model.real_net_mag_mse, val_model.real_net_spec_mse,
-                     val_model.real_net_clean_wav_L1_loss, val_model.real_net_clean_wav_L2_loss,
+                     val_model.real_net_wav_L1, val_model.real_net_wav_L2,
                      ])
       # print("\n", loss, real_net_mag_mse, real_net_spec_mse, real_net_wavL1, real_net_wavL2, flush=True)
       total_loss += loss

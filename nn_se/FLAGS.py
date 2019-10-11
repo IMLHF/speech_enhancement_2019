@@ -43,7 +43,7 @@ class BaseConfig(StaticKey):
 
   """
   @param loss_name:
-  real_net_mag_mse, real_net_spec_mse, real_net_clean_wav_L1_loss, real_net_clean_wav_L1_loss
+  real_net_mag_mse, real_net_spec_mse, real_net_wav_L1, real_net_wav_L2
   """
   loss_name = ["real_net_mag_mse"]
   frame_length = 512
@@ -85,15 +85,23 @@ class nn_se_lr001(BaseConfig): # done 15123
   """
   learning_rate = 0.001
 
-class nn_se_lr01(BaseConfig): # running 15123
+class nn_se_lr01(BaseConfig): # done 15123
   """
   cnn1lstm
   """
   learning_rate = 0.01
 
-class nn_se_realNet_complexMse(BaseConfig): # running 15123
+class nn_se_realNet_complexMse(BaseConfig): # done 15123
   learning_rate = 0.001
   loss_name = ["real_net_mag_mse", "real_net_spec_mse"]
+
+class nn_se_realNet_complexMseOnly(BaseConfig): # running 15123
+  learning_rate = 0.001
+  loss_name = ["real_net_spec_mse"]
+
+class nn_se_realNet_wavL1(BaseConfig): # running 15123
+  learning_rate = 0.001
+  loss_name = ["real_net_wav_L1"]
 
 """####################################################################################
 #######################################################################################
@@ -105,7 +113,7 @@ class p40(BaseConfig):
   GPU_PARTION = 0.225
   root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
 
-class p40_nn_se_cnn1lstm(p40): # pendding p40
+class p40_nn_se_cnn1lstm(p40): # runnning p40
   """
   cnn1lstm, same to "nn_se_warmup"
   """
@@ -117,17 +125,17 @@ class p40_nn_se_cnn2lstm(p40): # running p40
   """
   blstm_layers = 2
 
-class p40_nn_se_2lstmonly(p40): # running p40
+class p40_nn_se_2lstmonly(p40): # done p40
   """
   2lstm only
   """
   blstm_layers = 2
   no_cnn = True
 
-class p40_nn_se_cnnonly(p40): # pendding p40
+class p40_nn_se_cnnonly(p40): # running p40
   """
   cnn only
   """
   blstm_layers = 0
 
-PARAM = p40_nn_se_cnnonly
+PARAM = nn_se_realNet_wavL1

@@ -20,8 +20,8 @@ class CNN_RNN_REAL_MASK_MODEL(Module):
     self.real_net_spec_mse = losses.batch_time_fea_complex_mse(est_clean_spec_batch, self.clean_spec_batch)
 
     ## time domain loss
-    self.real_net_clean_wav_L1_loss = losses.batch_wav_L1_loss(est_clean_wav_batch, self.clean_wav_batch)
-    self.real_net_clean_wav_L2_loss = losses.batch_wav_L2_loss(est_clean_wav_batch, self.clean_wav_batch)
+    self.real_net_wav_L1 = losses.batch_wav_L1_loss(est_clean_wav_batch, self.clean_wav_batch)
+    self.real_net_wav_L2 = losses.batch_wav_L2_loss(est_clean_wav_batch, self.clean_wav_batch)
     # engregion losses
 
     loss = 0
@@ -31,7 +31,7 @@ class CNN_RNN_REAL_MASK_MODEL(Module):
       loss += {
         'real_net_mag_mse': self.real_net_mag_mse,
         'real_net_spec_mse': self.real_net_spec_mse,
-        'real_net_clean_wav_L1_loss': self.real_net_clean_wav_L1_loss,
-        'real_net_clean_wav_L2_loss': self.real_net_clean_wav_L2_loss,
+        'real_net_wav_L1': self.real_net_wav_L1,
+        'real_net_wav_L2': self.real_net_wav_L2,
       }[name]
     return loss
