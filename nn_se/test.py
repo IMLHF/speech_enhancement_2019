@@ -12,9 +12,9 @@ def test_dataloader_py():
   sess.run(batch.initializer)
   clean, noise, mixed=sess.run([batch.clean, batch.noise, batch.mixed])
   print(np.shape(clean))
-  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/clean.wav"),clean[0],16000)
-  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/noise.wav"),noise[0],16000)
-  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/mixed.wav"),mixed[0],16000)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/clean.wav"),clean[0],PARAM.sampling_rate)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/noise.wav"),noise[0],PARAM.sampling_rate)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/mixed.wav"),mixed[0],PARAM.sampling_rate)
 
 
 def wav_through_stft_istft():
@@ -34,7 +34,7 @@ def wav_through_stft_istft():
   sess = tf.compat.v1.Session()
   wav_np = sess.run(wav2)
   wav_np = wav_np[0]
-  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_reconstructed_step128.wav"),wav_np,16000)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_reconstructed_step128.wav"),wav_np,PARAM.sampling_rate)
 
 
 def wav_through_stft_istft_noreconstructed():
@@ -56,7 +56,7 @@ def wav_through_stft_istft_noreconstructed():
   sess = tf.compat.v1.Session()
   wav_np = sess.run(wav2)
   wav_np = wav_np[0]
-  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_only_stft.wav"),wav_np,16000)
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_only_stft.wav"),wav_np,PARAM.sampling_rate)
 
 
 if __name__ == "__main__":
