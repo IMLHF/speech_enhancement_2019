@@ -4,6 +4,7 @@ from .FLAGS import PARAM
 import tensorflow as tf
 import numpy as np
 import os
+from .utils import misc_utils
 
 def test_dataloader_py():
   batch=get_batch_inputs_from_dataset(PARAM.train_name)
@@ -16,5 +17,49 @@ def test_dataloader_py():
   audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/mixed.wav"),mixed[0],16000)
 
 
+def wav_through_stft_istft():
+  dataset_dir = misc_utils.datasets_dir()
+  testdata_dir = dataset_dir.joinpath(PARAM.test_name)
+  wav_dir = testdata_dir.joinpath("speech", "p265", "p265_002.wav")
+  wav, sr = audio.read_audio(str(wav_dir))
+  wav_batch = np.array([wav], dtype=np.float32)
+  spec = misc_utils.tf_batch_stft(wav_batch, PARAM.frame_length, 128)
+
+  mag = tf.math.abs(spec)
+  phase = tf.math.angle(spec)
+  spec2 = tf.cast(mag, tf.dtypes.complex64) * tf.exp(1j*tf.cast(phase, tf.dtypes.complex64))
+
+  wav2 = misc_utils.tf_batch_istft(spec2, PARAM.frame_length, 128)
+
+  sess = tf.compat.v1.Session()
+  wav_np = sess.run(wav2)
+  wav_np = wav_np[0]
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_reconstructed_step128.wav"),wav_np,16000)
+
+
+def wav_through_stft_istft_noreconstructed():
+  dataset_dir = misc_utils.datasets_dir()
+  testdata_dir = dataset_dir.joinpath(PARAM.test_name)
+  wav_dir = testdata_dir.joinpath("speech", "p265", "p265_002.wav")
+  wav, sr = audio.read_audio(str(wav_dir))
+  wav_batch = np.array([wav], dtype=np.float32)
+  spec = misc_utils.tf_batch_stft(wav_batch, PARAM.frame_length, PARAM.frame_step)
+
+  # mag = tf.math.abs(spec)
+  # phase = tf.math.angle(spec)
+  # spec2 = tf.cast(mag, tf.dtypes.complex64) * tf.exp(1j*tf.cast(phase, tf.dtypes.complex64))
+
+  spec2 = spec
+
+  wav2 = misc_utils.tf_batch_istft(spec2, PARAM.frame_length, PARAM.frame_step)
+
+  sess = tf.compat.v1.Session()
+  wav_np = sess.run(wav2)
+  wav_np = wav_np[0]
+  audio.write_audio(os.path.join(PARAM.root_dir,"exp/test/p265_002_only_stft.wav"),wav_np,16000)
+
+
 if __name__ == "__main__":
-  test_dataloader_py()
+  # test_dataloader_py()
+  wav_through_stft_istft()
+  # wav_through_stft_istft_noreconstructed()
