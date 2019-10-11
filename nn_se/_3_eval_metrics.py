@@ -71,7 +71,7 @@ def eval_one_record(clean_dir_and_noise_dir, mix_snr, save_dir=None):
   if save_dir is not None:
     audio.write_audio(os.path.join(save_dir, clean_dir_name+'.wav'), clean_wav, PARAM.sampling_rate)
     audio.write_audio(os.path.join(save_dir, clean_dir_name+'_'+noise_dir_name+'.wav'), mixed_wav, PARAM.sampling_rate)
-    audio.write_audio(os.path.join(save_dir, clean_dir_name+'_enhanced.wav'), enhanced_wav, PARAM.sampling_rate)
+    audio.write_audio(os.path.join(save_dir, clean_dir_name+'_'+noise_dir_name+'_enhanced.wav'), enhanced_wav, PARAM.sampling_rate)
 
   pesq_noisy = calc_pesq(clean_wav, mixed_wav, PARAM.sampling_rate)
   stoi_noisy = calc_stoi(clean_wav, mixed_wav, PARAM.sampling_rate)
@@ -80,7 +80,7 @@ def eval_one_record(clean_dir_and_noise_dir, mix_snr, save_dir=None):
   stoi_enhanced = calc_stoi(clean_wav, enhanced_wav, PARAM.sampling_rate)
   sdr_enhanced = calc_sdr(clean_wav, enhanced_wav, PARAM.sampling_rate)
 
-  return RecordEvalAns(clean_wav_name=Path(clean_dir).name, noise_wav_name=Path(noise_dir).name,
+  return RecordEvalAns(clean_wav_name=Path(clean_dir).stem, noise_wav_name=Path(noise_dir).stem,
                        pesq_noisy=pesq_noisy, stoi_noisy=stoi_noisy, sdr_noisy=sdr_noisy,
                        pesq_enhanced=pesq_enhanced, stoi_enhanced=stoi_enhanced, sdr_enhanced=sdr_enhanced)
 
@@ -107,7 +107,7 @@ def eval_testSet_by_list(clean_noise_pair_list, mix_snr, save_dir=None):
   misc_utils.print_log("write log\n", str(test_log_file), no_prt=True)
   for eval_ans in eval_ans_list:
     msg = ""
-    msg += eval_ans.clean_wav_name+" | "+eval_ans.noise_wav_name + (" |  PESQi: %.2f >>>\n" % (eval_ans.pesq_enhanced-eval_ans.pesq_noisy))
+    msg += eval_ans.clean_wav_name+"_"+eval_ans.noise_wav_name + (" |  PESQi: %.2f >>>\n" % (eval_ans.pesq_enhanced-eval_ans.pesq_noisy))
     msg += ("       pesq: %.2f -> %.2f | stoi: %.2f -> %.2f | sdr: %.2f -> %.2f\n\n" % (eval_ans.pesq_noisy, eval_ans.pesq_enhanced,
                                                                                         eval_ans.stoi_noisy, eval_ans.stoi_enhanced,
                                                                                         eval_ans.sdr_noisy, eval_ans.sdr_enhanced))
@@ -151,6 +151,7 @@ def eval_testSet_by_meta(mix_SNR, save_test_records=False):
 
   metaf = meta_dir.open("r")
   meta_list = list(metaf.readlines())
+  meta_list.sort()
   meta_list = [meta.strip().split("|") for meta in meta_list] # [ (clean, noise), ...]
 
   if not save_test_records:
