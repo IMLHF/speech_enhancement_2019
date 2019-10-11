@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 
 # must be absolute path
-musan_all_noise_dir ="/data/datalhf/many_noise_16k"
+musan_all_noise_dir ="/data/datalhf/many_noise_8k"
 
 noise_list=[os.path.join(musan_all_noise_dir, _dir) for _dir in os.listdir(musan_all_noise_dir) if _dir[-4:]==".wav"]
 
