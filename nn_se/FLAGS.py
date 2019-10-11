@@ -54,7 +54,7 @@ class BaseConfig(StaticKey):
   frame_length = 256
   frame_step = 64
   no_cnn = False
-  blstm_layers = 1
+  blstm_layers = 2
   fft_dot = 129
   max_keep_ckpt = 30
   learning_rate = 0.001
