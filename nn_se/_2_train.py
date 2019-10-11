@@ -115,9 +115,9 @@ def main():
     ModelC = model_builder.get_model_class()
 
     variables = modules.Variables()
-    train_model = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean, train_inputs.noise)
+    train_model = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
     # tf.compat.v1.get_variable_scope().reuse_variables()
-    val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, variables, val_inputs.mixed,val_inputs.clean, val_inputs.noise)
+    val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, variables, val_inputs.mixed,val_inputs.clean)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
                     tf.compat.v1.local_variables_initializer())
     misc_utils.show_variables(train_model.save_variables)
@@ -125,8 +125,8 @@ def main():
   g.finalize()
 
   config = tf.compat.v1.ConfigProto()
-  # config.gpu_options.allow_growth = PARAM.GPU_RAM_ALLOW_GROWTH
-  config.gpu_options.per_process_gpu_memory_fraction = PARAM.GPU_PARTION
+  config.gpu_options.allow_growth = PARAM.GPU_RAM_ALLOW_GROWTH
+  # config.gpu_options.per_process_gpu_memory_fraction = PARAM.GPU_PARTION
   config.allow_soft_placement = False
   sess = tf.compat.v1.Session(config=config, graph=g)
   sess.run(init)
