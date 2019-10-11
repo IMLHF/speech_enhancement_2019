@@ -95,11 +95,21 @@ class nn_se_realNet_complexMse(BaseConfig): # running 15123
   learning_rate = 0.001
   loss_name = ["real_net_mag_mse", "real_net_spec_mse"]
 
+"""####################################################################################
+#######################################################################################
+####################################################################################"""
+
 class p40(BaseConfig):
   n_processor_gen_tfrecords = 56
   n_processor_tfdata = 8
-  GPU_PARTION = 0.47
+  GPU_PARTION = 0.225
   root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
+
+class p40_nn_se_cnn1lstm(p40): # pendding p40
+  """
+  cnn1lstm, same to "nn_se_warmup"
+  """
+  pass
 
 class p40_nn_se_cnn2lstm(p40): # running p40
   """
@@ -120,4 +130,4 @@ class p40_nn_se_cnnonly(p40): # pendding p40
   """
   blstm_layers = 0
 
-PARAM = nn_se_realNet_complexMse
+PARAM = p40_nn_se_cnnonly

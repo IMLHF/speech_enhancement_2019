@@ -110,19 +110,23 @@ class Module(object):
     outputs = mixed_mag_batch
     _batch_size = tf.shape(outputs)[0]
 
+    # CNN
     for conv2d in self.variables.conv2d_layers:
       outputs = conv2d(outputs)
     if len(self.variables.conv2d_layers) > 0:
       outputs = tf.squeeze(outputs, [-1]) # [batch, time, fft_dot]
 
     # print(outputs.shape.as_list())
-
     outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot])
+
+    # BLSTM
     for blstm in self.variables.blstm_layers:
       outputs = blstm(outputs, training=training)
     # print(outputs.shape.as_list())
+    if len(self.variables.blstm_layers) > 0:
+      outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL*2])
 
-    outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL*2])
+    # FC
     outputs = self.variables.out_fc(outputs)
     outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot])
     return outputs
