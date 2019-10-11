@@ -80,25 +80,25 @@ class debug(BaseConfig):
 
 class nn_se_lr0001(BaseConfig): # running 15123
   """
-  cnn1blstm
+  cnn2blstm
   """
   learning_rate = 0.0001
 
 class nn_se_lr0003(BaseConfig): # running 15123
   """
-  cnn1blstm
+  cnn2blstm
   """
   learning_rate = 0.0003
 
 class nn_se_lr001(BaseConfig): # pendding 15123
   """
-  cnn1blstm
+  cnn2blstm
   """
   learning_rate = 0.001
 
 class nn_se_lr003(BaseConfig): # pendding 15123
   """
-  cnn1lstm
+  cnn2lstm
   """
   learning_rate = 0.003
 
