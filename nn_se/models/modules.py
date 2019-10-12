@@ -50,6 +50,13 @@ class Variables(object):
     #   self.blstm_layers.append(tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
     #                                                          merge_mode='concat', name='blstm'))
 
+    #LSTM
+    self.lstm_layers = []
+    for i in range(1, PARAM.lstm_layers+1):
+      lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
+                                  return_sequences=True, name='lstm_%d' % i)
+      self.lstm_layers.append(lstm)
+
     # FC
     self.out_fc = tf.keras.layers.Dense(PARAM.fft_dot, name='out_fc')
 
@@ -138,8 +145,12 @@ class Module(object):
     for blstm in self.variables.blstm_layers:
       outputs = blstm(outputs, training=training)
 
+    # LSTM
+    for lstm in self.variables.lstm_layers:
+      outputs = lstm(outputs, training=training)
+
     # FC
-    if len(self.variables.blstm_layers) > 0:
+    if len(self.variables.blstm_layers) > 0 and len(self.variables.lstm_layers) <= 0:
       outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL*2])
     else:
       outputs = tf.reshape(outputs, [-1, PARAM.fft_dot])

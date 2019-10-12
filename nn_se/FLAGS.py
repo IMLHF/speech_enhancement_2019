@@ -55,6 +55,7 @@ class BaseConfig(StaticKey):
   frame_step = 64
   no_cnn = False
   blstm_layers = 2
+  lstm_layers = 0
   fft_dot = 129
   max_keep_ckpt = 30
   learning_rate = 0.001
@@ -140,4 +141,4 @@ class p40_nn_se_cnnonly(p40): # running p40
   """
   blstm_layers = 0
 
-PARAM = nn_se_lr0001
+PARAM = nn_se_lr0003
