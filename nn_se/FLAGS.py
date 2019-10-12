@@ -79,25 +79,31 @@ class debug(BaseConfig):
   blstm_layers = 2
   no_cnn = True
 
+class p40(BaseConfig):
+  n_processor_gen_tfrecords = 56
+  n_processor_tfdata = 8
+  GPU_PARTION = 0.225
+  root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
+
 class nn_se_lr0001(BaseConfig): # running 15123
   """
   cnn2blstm
   """
   learning_rate = 0.0001
 
-class nn_se_lr0003(BaseConfig): # running 15123
+class nn_se_lr0003(BaseConfig): # done 15123
   """
   cnn2blstm
   """
   learning_rate = 0.0003
 
-class nn_se_lr001(BaseConfig): # pendding 15123
+class nn_se_lr001(BaseConfig): # running 15123
   """
   cnn2blstm
   """
   learning_rate = 0.001
 
-class nn_se_lr003(BaseConfig): # pendding 15123
+class nn_se_lr003(p40): # running p40
   """
   cnn2lstm
   """
@@ -106,39 +112,5 @@ class nn_se_lr003(BaseConfig): # pendding 15123
 
 # add loss weight
 
-"""####################################################################################
-#######################################################################################
-####################################################################################"""
 
-class p40(BaseConfig):
-  n_processor_gen_tfrecords = 56
-  n_processor_tfdata = 8
-  GPU_PARTION = 0.225
-  root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
-
-class p40_nn_se_cnn1lstm(p40): # runnning p40
-  """
-  cnn1lstm, same to "nn_se_warmup"
-  """
-  pass
-
-class p40_nn_se_cnn2lstm(p40): # running p40
-  """
-  cnn2lstm
-  """
-  blstm_layers = 2
-
-class p40_nn_se_2lstmonly(p40): # done p40
-  """
-  2lstm only
-  """
-  blstm_layers = 2
-  no_cnn = True
-
-class p40_nn_se_cnnonly(p40): # running p40
-  """
-  cnn only
-  """
-  blstm_layers = 0
-
-PARAM = nn_se_lr0003
+PARAM = nn_se_lr003
