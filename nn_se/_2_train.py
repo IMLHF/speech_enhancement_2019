@@ -212,5 +212,5 @@ if __name__ == "__main__":
   main()
   """
   run cmd:
-  `OMP_NUM_THREADS=1 python -m xx._2_train`
+  `CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=1 python -m xx._2_train`
   """
