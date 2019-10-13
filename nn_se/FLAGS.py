@@ -48,7 +48,8 @@ class BaseConfig(StaticKey):
 
   """
   @param loss_name:
-  real_net_mag_mse, real_net_spec_mse, real_net_wav_L1, real_net_wav_L2
+  real_net_mag_mse, real_net_spec_mse, real_net_wav_L1, real_net_wav_L2,
+  real_net_sdrV1,
   """
   loss_name = ["real_net_mag_mse"]
   frame_length = 256
@@ -115,14 +116,14 @@ class nn_se_only2blstm(BaseConfig): # running 15123
   """
   no_cnn = True
 
-class nn_se_only1blstm(BaseConfig): # running 15123
+class nn_se_only1blstm(BaseConfig): # done 15123
   """
   only1blstm
   """
   no_cnn = True
   blstm_layers = 1
 
-class nn_se_cnn1blstm(p40): # running p40
+class nn_se_cnn1blstm(p40): # done p40
   """
   cnn1blstm
   """
@@ -135,7 +136,39 @@ class nn_se_cnn1blstm1lstm(p40): # running p40
   blstm_layers = 1
   lstm_layers = 1
 
+class nn_se_rSpecMSE(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+
+class nn_se_rWavL1(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_wav_L1"]
+
+class nn_se_rWavL2(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_wav_L2"]
+
+class nn_se_rSDRv1(BaseConfig): # running 15123
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_sdrV1"]
+
 # add loss weight
 
 
-PARAM = nn_se_only1blstm
+PARAM = nn_se_rSDRv1
