@@ -85,7 +85,7 @@ class p40(BaseConfig):
   GPU_PARTION = 0.225
   root_dir = '/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp'
 
-class nn_se_lr0001(BaseConfig): # running 15123
+class nn_se_lr0001(BaseConfig): # done 15123
   """
   cnn2blstm
   """
@@ -97,20 +97,45 @@ class nn_se_lr0003(BaseConfig): # done 15123
   """
   learning_rate = 0.0003
 
-class nn_se_lr001(BaseConfig): # running 15123
+class nn_se_lr001(BaseConfig): # done 15123
   """
   cnn2blstm
   """
   learning_rate = 0.001
 
-class nn_se_lr003(p40): # running p40
+class nn_se_lr003(p40): # done p40
   """
-  cnn2lstm
+  cnn2blstm
   """
   learning_rate = 0.003
 
+class nn_se_only2blstm(BaseConfig): # running 15123
+  """
+  only2blstm
+  """
+  no_cnn = True
+
+class nn_se_only1blstm(BaseConfig): # running 15123
+  """
+  only1blstm
+  """
+  no_cnn = True
+  blstm_layers = 1
+
+class nn_se_cnn1blstm(p40): # running p40
+  """
+  cnn1blstm
+  """
+  blstm_layers = 1
+
+class nn_se_cnn1blstm1lstm(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
 
 # add loss weight
 
 
-PARAM = nn_se_lr003
+PARAM = nn_se_only1blstm
