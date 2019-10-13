@@ -153,7 +153,7 @@ class Module(object):
     if len(self.variables.blstm_layers) > 0 and len(self.variables.lstm_layers) <= 0:
       outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL*2])
     else:
-      outputs = tf.reshape(outputs, [-1, PARAM.fft_dot])
+      outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL])
     outputs = self.variables.out_fc(outputs)
     outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot])
     return outputs
