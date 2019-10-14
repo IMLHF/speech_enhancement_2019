@@ -53,8 +53,8 @@ def batch_sdrV2_loss(est, ref):
   return loss
 
 def batch_cosSimV1_loss(est, ref):
-  cos_sim = tf.divide(vec_dot_mul(est, ref),
-                      tf.multiply(vec_normal(est), vec_normal(ref)))
+  cos_sim = 1.0 - tf.divide(vec_dot_mul(est, ref),
+                            tf.multiply(vec_normal(est), vec_normal(ref)))
   loss = tf.reduce_sum(cos_sim, 0)
   return loss
 
