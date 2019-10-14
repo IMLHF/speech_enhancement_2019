@@ -32,8 +32,9 @@ def batch_wav_L2_loss(y1, y2):
   return loss
 
 def batch_sdrV1_loss(est, ref):
-  loss = tf.divide(tf.reduce_sum(tf.multiply(est, est)),
-                   tf.reduce_sum(tf.multiply(est, ref)))
+  loss_s1 = tf.divide(tf.reduce_sum(tf.multiply(est, est), -1),
+                      tf.square(tf.reduce_sum(tf.multiply(est, ref), -1)))
+  loss = tf.reduce_sum(loss_s1)
   return loss
 
 def batch_wav_cos_Lp_loss(y1, y2, p):
