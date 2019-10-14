@@ -49,7 +49,7 @@ class BaseConfig(StaticKey):
   """
   @param loss_name:
   real_net_mag_mse, real_net_spec_mse, real_net_wav_L1, real_net_wav_L2,
-  real_net_sdrV1, real_net_sdrV2
+  real_net_sdrV1, real_net_sdrV2, real_net_cosSimV1
   """
   loss_name = ["real_net_mag_mse"]
   frame_length = 256
@@ -152,7 +152,7 @@ class nn_se_rWavL1(p40): # running p40
   lstm_layers = 1
   loss_name = ["real_net_wav_L1"]
 
-class nn_se_rWavL2(p40): # running p40
+class nn_se_rWavL2(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -168,14 +168,23 @@ class nn_se_rSDRv1(BaseConfig): # running 15123
   lstm_layers = 1
   loss_name = ["real_net_sdrV1"]
 
-class nn_se_rSDRv2(BaseConfig): # running 15123
+class nn_se_rSDRv2(p40): # running p40
   """
   cnn1blstm1lstm
   """
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_sdrV2"]
+
+class nn_se_rCosSimV1(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_cosSimV1"]
+
 # add loss weight
 
 
-PARAM = nn_se_rSDRv2
+PARAM = nn_se_rCosSimV1

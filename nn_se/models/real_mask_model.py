@@ -24,6 +24,7 @@ class CNN_RNN_REAL_MASK_MODEL(Module):
     self.real_net_wav_L2 = losses.batch_wav_L2_loss(est_clean_wav_batch, self.clean_wav_batch)*100.0
     self.real_net_sdrV1 = losses.batch_sdrV1_loss(est_clean_wav_batch, self.clean_wav_batch)
     self.real_net_sdrV2 = losses.batch_sdrV2_loss(est_clean_wav_batch, self.clean_wav_batch)
+    self.real_net_cosSimV1 = losses.batch_cosSimV1_loss(est_clean_wav_batch, self.clean_wav_batch)
     # engregion losses
 
     loss = 0
@@ -37,5 +38,6 @@ class CNN_RNN_REAL_MASK_MODEL(Module):
         'real_net_wav_L2': self.real_net_wav_L2,
         'real_net_sdrV1': self.real_net_sdrV1,
         'real_net_sdrV2': self.real_net_sdrV2,
+        'real_net_cosSimV1': self.real_net_cosSimV1,
       }[name]
     return loss
