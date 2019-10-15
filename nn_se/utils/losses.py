@@ -76,8 +76,8 @@ def batch_realspec_timeaxis_cos_sim_V1(est, ref):
   # est, ref : [batch, time, fre]
   est = tf.transpose(est, [0,2,1]) # [batch, f, t]
   ref = tf.transpose(ref, [0,2,1])
-  cos_sim_t = tf.square(1.0 - tf.divide(vec_dot_mul(est, ref),
-                                        tf.multiply(vec_normal(est), vec_normal(ref))))
+  cos_sim_t = 1.0 - tf.divide(vec_dot_mul(est, ref),
+                              tf.maximum(tf.multiply(vec_normal(est), vec_normal(ref)), 1e-12))
   loss = tf.reduce_sum(tf.reduce_mean(cos_sim_t, -1))
   return loss
 
@@ -88,13 +88,13 @@ def batch_complexspec_timeaxis_cos_sim_V1(est, ref):
   ref_imag = tf.math.imag(ref)
   real_t_cossim = batch_realspec_timeaxis_cos_sim_V1(est_real, ref_real)
   imag_t_cossim = batch_realspec_timeaxis_cos_sim_V1(est_imag, ref_imag)
-  loss = real_t_cossim + imag_t_cossim
+  loss = 0.5*real_t_cossim + 0.5*imag_t_cossim
   return loss
 
 def batch_realspec_frequencyaxis_cos_sim_V1(est, ref):
   # est, ref : [batch, time, fre]
-  cos_sim_t = tf.square(1.0 - tf.divide(vec_dot_mul(est, ref),
-                                        tf.multiply(vec_normal(est), vec_normal(ref))))
+  cos_sim_t = 1.0 - tf.divide(vec_dot_mul(est, ref),
+                              tf.multiply(vec_normal(est), vec_normal(ref)))
   loss= tf.reduce_sum(tf.reduce_mean(cos_sim_t, -1))
   return loss
 
@@ -105,13 +105,13 @@ def batch_complexspec_frequencyaxis_cos_sim_V1(est, ref):
   ref_imag = tf.math.imag(ref)
   real_f_cossim = batch_realspec_frequencyaxis_cos_sim_V1(est_real, ref_real)
   imag_f_cossim = batch_realspec_frequencyaxis_cos_sim_V1(est_imag, ref_imag)
-  loss = real_f_cossim + imag_f_cossim
+  loss = 0.5*real_f_cossim + 0.5*imag_f_cossim
   return loss
 
 def batch_realspec_TF_cos_sim_V1(est, ref):
   loss_t_axis_cossim = batch_realspec_timeaxis_cos_sim_V1(est, ref)
   loss_f_axis_cossim = batch_realspec_frequencyaxis_cos_sim_V1(est, ref)
-  loss = loss_t_axis_cossim + loss_f_axis_cossim
+  loss = 0.5*loss_t_axis_cossim + 0.5*loss_f_axis_cossim
   return loss
 
 def batch_complexspec_TF_cos_sim_V1(est, ref):
@@ -121,7 +121,7 @@ def batch_complexspec_TF_cos_sim_V1(est, ref):
   ref_imag = tf.math.imag(ref)
   real_tf_cossim = batch_realspec_TF_cos_sim_V1(est_real, ref_real)
   imag_tf_cossim = batch_realspec_TF_cos_sim_V1(est_imag, ref_imag)
-  loss = real_tf_cossim + imag_tf_cossim
+  loss = 0.5*real_tf_cossim + 0.5*imag_tf_cossim
   return loss
 
 def batch_wav_cos_Lp_loss(y1, y2, p):
