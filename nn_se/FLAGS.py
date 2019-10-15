@@ -49,7 +49,8 @@ class BaseConfig(StaticKey):
   """
   @param loss_name:
   real_net_mag_mse, real_net_spec_mse, real_net_wav_L1, real_net_wav_L2,
-  real_net_sdrV1, real_net_sdrV2, real_net_cosSimV1
+  real_net_sdrV1, real_net_sdrV2, real_net_sdrV3, real_net_cosSimV1, real_net_cosSimV2,
+  real_net_specTCosSimV1, real_net_specFCosSimV1, real_net_specTFCosSimV1
   """
   loss_name = ["real_net_mag_mse"]
   frame_length = 256
@@ -136,7 +137,7 @@ class nn_se_cnn1blstm1lstm(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
 
-class nn_se_rSpecMSE(p40): # running p40
+class nn_se_rSpecMSE(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -144,7 +145,7 @@ class nn_se_rSpecMSE(p40): # running p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rWavL1(p40): # running p40
+class nn_se_rWavL1(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -160,7 +161,7 @@ class nn_se_rWavL2(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_wav_L2"]
 
-class nn_se_rSDRv1(BaseConfig): # running 15123
+class nn_se_rSDRv1(BaseConfig): # done 15123
   """
   cnn1blstm1lstm
   """
@@ -168,7 +169,7 @@ class nn_se_rSDRv1(BaseConfig): # running 15123
   lstm_layers = 1
   loss_name = ["real_net_sdrV1"]
 
-class nn_se_rSDRv2(p40): # running p40
+class nn_se_rSDRv2(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -176,7 +177,15 @@ class nn_se_rSDRv2(p40): # running p40
   lstm_layers = 1
   loss_name = ["real_net_sdrV2"]
 
-class nn_se_rCosSimV1(p40): # running p40
+class nn_se_rSDRv3(BaseConfig): # running 15123
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_sdrV3"]
+
+class nn_se_rCosSimV1(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -184,7 +193,39 @@ class nn_se_rCosSimV1(p40): # running p40
   lstm_layers = 1
   loss_name = ["real_net_cosSimV1"]
 
+class nn_se_rCosSimV2(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_cosSimV2"]
+
+class nn_se_specTCosSimV1(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_specTCosSimV1"]
+
+class nn_se_specFCosSimV1(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_specFCosSimV1"]
+
+class nn_se_specTFCosSimV1(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_specTFCosSimV1"]
+
 # add loss weight
 
 
-PARAM = nn_se_rCosSimV1
+PARAM = nn_se_specTFCosSimV1
