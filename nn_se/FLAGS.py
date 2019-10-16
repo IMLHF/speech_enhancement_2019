@@ -56,6 +56,8 @@ class BaseConfig(StaticKey):
   st_frame_step_for_loss = 128
   loss_name = ["real_net_mag_mse"]
   loss_weight = []
+  use_wav_as_feature = False
+  net_out_mask = True
   frame_length = 256
   frame_step = 64
   no_cnn = False
@@ -164,6 +166,7 @@ class nn_se_rWavL2(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_wav_L2"]
 
+
 class nn_se_rSDRv1(BaseConfig): # done 15123
   """
   cnn1blstm1lstm
@@ -267,7 +270,31 @@ class nn_se_rSpecMseSDRv3_1_1(p40): # running p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse", "real_net_sdrV3"]
   loss_weight = [1.0, 1.0]
-# add loss weight
 
+class nn_se_rSTWavMSE256(p40): # running p40
+  """
+  cnn1blstm1lstm
+  short time wav as feature
 
-PARAM = nn_se_rSpecMseSDRv3_1_1
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  use_wav_as_feature = True
+  frame_length = 256
+  frame_step = 64
+  fft_dot = 256
+
+class nn_se_rSTWavMSE512(p40): # running p40
+  """
+  cnn1blstm1lstm
+  short time wav as feature
+
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  use_wav_as_feature = True
+  frame_length = 512
+  frame_step = 128
+  fft_dot = 512
+
+PARAM = nn_se_rSTWavMSE512
