@@ -31,13 +31,16 @@ class CNN_RNN_REAL_MASK_MODEL(Module):
     self.real_net_cosSimV1 = losses.batch_cosSimV1_loss(est_clean_wav_batch, self.clean_wav_batch) # *0.167
     self.real_net_cosSimV1WT10 = self.real_net_cosSimV1*0.167 # loss weighted to 10 level
     self.real_net_cosSimV2 = losses.batch_cosSimV2_loss(est_clean_wav_batch, self.clean_wav_batch) # *0.334
+    self.real_net_stSDRV3 = losses.batch_short_time_sdrV3_loss(est_clean_wav_batch, self.clean_wav_batch,
+                                                               PARAM.st_frame_length_for_loss,
+                                                               PARAM.st_frame_step_for_loss)
     # engregion losses
 
     loss = 0
     loss_names = PARAM.loss_name
 
-    for name in loss_names:
-      loss += {
+    for i, name in enumerate(loss_names):
+      loss_t = {
         'real_net_mag_mse': self.real_net_mag_mse,
         'real_net_spec_mse': self.real_net_spec_mse,
         'real_net_wav_L1': self.real_net_wav_L1,
@@ -51,5 +54,9 @@ class CNN_RNN_REAL_MASK_MODEL(Module):
         'real_net_specTCosSimV1': self.real_net_specTCosSimV1,
         'real_net_specFCosSimV1': self.real_net_specFCosSimV1,
         'real_net_specTFCosSimV1': self.real_net_specTFCosSimV1,
+        'real_net_stSDRV3': self.real_net_stSDRV3,
       }[name]
+      if len(PARAM.loss_weight) > 0:
+        loss_t *= PARAM.loss_weight[i]
+      loss += loss_t
     return loss

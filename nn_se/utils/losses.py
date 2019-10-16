@@ -60,6 +60,18 @@ def batch_sdrV3_loss(est, ref): # sin^2 (1-cos^2)
   loss = tf.reduce_sum(loss_s1)
   return loss
 
+def batch_short_time_sdrV3_loss(est, ref, st_frame_length, st_frame_step): # sin^2 (1-cos^2)
+  st_est = tf.signal.frame(est, frame_length=st_frame_length, # [batch, frame, st_wav]
+                           frame_step=st_frame_step, pad_end=True)
+  st_ref = tf.signal.frame(ref, frame_length=st_frame_length,
+                           frame_step=st_frame_step, pad_end=True)
+  loss_s1 = 1.0 - tf.divide(tf.square(vec_dot_mul(st_est, st_ref)), # [batch, frame]
+                            tf.multiply(vec_dot_mul(st_est, st_est),
+                                        vec_dot_mul(st_ref, st_ref)))
+
+  loss = tf.reduce_sum(tf.reduce_mean(loss_s1, -1))
+  return loss
+
 def batch_cosSimV1_loss(est, ref): # 1-cos
   cos_sim = 1.0 - tf.divide(vec_dot_mul(est, ref),
                             tf.multiply(vec_normal(est), vec_normal(ref)))
