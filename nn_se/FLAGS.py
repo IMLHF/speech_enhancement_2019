@@ -299,4 +299,34 @@ class nn_se_rSTWavMSE512(p40): # running p40
   fft_dot = 512
   loss_weight = [100.0]
 
-PARAM = nn_se_rSTWavMSE512
+class nn_se_rSTWavMSE256Map(p40): # running p40
+  """
+  cnn1blstm1lstm
+  short time wav as feature
+
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  use_wav_as_feature = True
+  frame_length = 256
+  frame_step = 64
+  fft_dot = 256
+  loss_weight = [100.0]
+  net_out_mask = False
+
+class nn_se_rSTWavMSE512Map(p40): # running p40
+  """
+  cnn1blstm1lstm
+  short time wav as feature
+
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  use_wav_as_feature = True
+  frame_length = 512
+  frame_step = 128
+  fft_dot = 512
+  loss_weight = [100.0]
+  net_out_mask = False
+
+PARAM = nn_se_rSTWavMSE512Map
