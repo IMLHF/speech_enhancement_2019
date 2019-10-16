@@ -283,6 +283,7 @@ class nn_se_rSTWavMSE256(p40): # running p40
   frame_length = 256
   frame_step = 64
   fft_dot = 256
+  loss_weight = [100.0]
 
 class nn_se_rSTWavMSE512(p40): # running p40
   """
@@ -296,5 +297,6 @@ class nn_se_rSTWavMSE512(p40): # running p40
   frame_length = 512
   frame_step = 128
   fft_dot = 512
+  loss_weight = [100.0]
 
 PARAM = nn_se_rSTWavMSE512
