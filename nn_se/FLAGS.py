@@ -298,6 +298,7 @@ class nn_se_rSTWavMSE512(p40): # running p40
   frame_step = 128
   fft_dot = 512
   loss_weight = [100.0]
+  GPU_PARTION = 0.3
 
 class nn_se_rSTWavMSE256Map(p40): # running p40
   """
@@ -328,5 +329,6 @@ class nn_se_rSTWavMSE512Map(p40): # running p40
   fft_dot = 512
   loss_weight = [100.0]
   net_out_mask = False
+  GPU_PARTION = 0.3
 
-PARAM = nn_se_rSTWavMSE512Map
+PARAM = nn_se_rSTWavMSE512
