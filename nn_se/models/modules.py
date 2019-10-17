@@ -1,10 +1,20 @@
 import tensorflow as tf
 import abc
 import collections
+from typing import Union
 
 from ..FLAGS import PARAM
 from ..utils import losses
 from ..utils import misc_utils
+
+
+class ComplexVariables(object):
+  """
+  Complex Value NN Variables
+  """
+  def __init__(self):
+    pass
+
 
 class RealVariables(object):
   """
@@ -67,7 +77,7 @@ class Module(object):
   """
   def __init__(self,
                mode,
-               variables: RealVariables,
+               variables: Union[RealVariables],
                mixed_wav_batch,
                clean_wav_batch=None,
                noise_wav_batch=None):
