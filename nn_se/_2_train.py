@@ -121,7 +121,7 @@ def main():
 
     ModelC = model_builder.get_model_class()
 
-    variables = modules.Variables()
+    variables = modules.RealVariables()
     train_model = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
     # tf.compat.v1.get_variable_scope().reuse_variables()
     val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, variables, val_inputs.mixed,val_inputs.clean)

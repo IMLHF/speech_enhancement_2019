@@ -21,7 +21,7 @@ def build_SMG(ckpt_name=None, batch_size=None, finalizeG=True):
 
     ModelC = model_builder.get_model_class()
 
-    variables = modules.Variables()
+    variables = modules.RealVariables()
     infer_model = ModelC(PARAM.MODEL_INFER_KEY, variables, mixed_batch)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
                     tf.compat.v1.local_variables_initializer())

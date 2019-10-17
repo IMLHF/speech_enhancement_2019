@@ -6,9 +6,9 @@ from ..FLAGS import PARAM
 from ..utils import losses
 from ..utils import misc_utils
 
-class Variables(object):
+class RealVariables(object):
   """
-  NN Variables
+  Real Value NN Variables
   """
   def __init__(self):
     with tf.compat.v1.variable_scope("compat.v1.var", reuse=tf.compat.v1.AUTO_REUSE):
@@ -67,7 +67,7 @@ class Module(object):
   """
   def __init__(self,
                mode,
-               variables: Variables,
+               variables: RealVariables,
                mixed_wav_batch,
                clean_wav_batch=None,
                noise_wav_batch=None):
