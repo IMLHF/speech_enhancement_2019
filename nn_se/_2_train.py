@@ -194,7 +194,8 @@ def main():
       train_model.change_lr(sess, new_lr)
 
     # stop criterion
-    if epoch >= PARAM.max_epoch or model_abandon_time >= PARAM.max_model_abandon_time:
+    if (epoch >= PARAM.max_epoch or
+            model_abandon_time >= PARAM.max_model_abandon_time) and not PARAM.no_stop:
       misc_utils.print_log("\n\n", train_log_file, no_time=True)
       msg = "finished, too small learning rate %e.\n" % trainOutputs.lr
       tf.logging.info(msg)

@@ -79,6 +79,7 @@ class BaseConfig(StaticKey):
   batches_to_logging = 300
 
   max_model_abandon_time = 3
+  no_stop = False
   use_lr_warmup = True # true: lr warmup; false: lr halving
   warmup_steps = 4000. # for (use_lr_warmup == true)
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
@@ -152,6 +153,15 @@ class nn_se_rSpecMSE(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
+
+class nn_se_rSpecMSE_noStop(BaseConfig): # running 15041
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  no_stop = True
 
 class nn_se_rReMagMSE100(p40): # done p40
   """
@@ -426,6 +436,22 @@ class nn_se_rSTWavMSE256Map(p40): # done p40
   loss_weight = [100.0]
   net_out_mask = False
 
+class nn_se_rSTWavMSE256Map_noStop(BaseConfig): # running 15041
+  """
+  cnn1blstm1lstm
+  short time wav as feature
+  no stop
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  use_wav_as_feature = True
+  frame_length = 256
+  frame_step = 64
+  fft_dot = 256
+  loss_weight = [100.0]
+  net_out_mask = False
+  no_stop = True
+
 class nn_se_rSTWavMSE512Map(p40): # done p40
   """
   cnn1blstm1lstm
@@ -442,6 +468,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rReWavL2_AFD1000
+PARAM = nn_se_rSTWavMSE256Map_noStop
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train
