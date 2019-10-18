@@ -17,7 +17,7 @@ rm */__pycache__* -rf
 
 if [ "$site" == "p40" ]; then
   rsync -avh -e "ssh -p 22 -o ProxyCommand='ssh -p 8695 zhangwenbo5@120.92.114.84 -W %h:%p'" --exclude-from='.gitignore' ./nn_se/* zhangwenbo5@ksai-P40-2:/home/zhangwenbo5/lihongfeng/speech_enhancement_2019_exp/$2
-elif [ "$site" == "15123" ]; then
+elif [ "$site" == "15123" ] || [ "$site" == "15041" ]; then
   echo "To $user@$site:~/worklhf/speech_enhancement_2019_exp/$2"
   rsync -avh -e 'ssh -p '$site --exclude-from='.gitignore' ./nn_se/* $user@speaker.is99kdf.xyz:~/worklhf/speech_enhancement_2019_exp/$2
 fi
