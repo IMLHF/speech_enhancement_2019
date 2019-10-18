@@ -49,7 +49,7 @@ class BaseConfig(StaticKey):
   """
   @param loss_name:
   real_net_mag_mse, real_net_spec_mse, real_net_wav_L1, real_net_wav_L2,
-  real_net_reMagMse, real_net_reSpecMse,
+  real_net_reMagMse, real_net_reSpecMse, real_net_reWavL2,
   real_net_sdrV1, real_net_sdrV2, real_net_sdrV3, real_net_stSDRV3, real_net_cosSimV1, real_net_cosSimV1WT10, real_net_cosSimV2,
   real_net_specTCosSimV1, real_net_specFCosSimV1, real_net_specTFCosSimV1,
   """
@@ -153,7 +153,7 @@ class nn_se_rSpecMSE(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rReMagMSE100(p40): # running p40
+class nn_se_rReMagMSE100(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -162,7 +162,7 @@ class nn_se_rReMagMSE100(p40): # running p40
   loss_name = ["real_net_reMagMse"]
   relative_loss_AFD = 100.0
 
-class nn_se_rReMagMSE1000(p40): # running p40
+class nn_se_rReMagMSE1000(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -180,7 +180,7 @@ class nn_se_rReSpecMSE100(p40): # running p40
   loss_name = ["real_net_reSpecMse"]
   relative_loss_AFD = 100.0
 
-class nn_se_rReSpecMSE1000(BaseConfig): # running p40
+class nn_se_rReSpecMSE1000(BaseConfig): # running 15123
   """
   cnn1blstm1lstm
   """
@@ -205,6 +205,25 @@ class nn_se_rWavL2(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_wav_L2"]
 
+class nn_se_rReWavL2_AFD100(p40): # running p40
+  """
+  cnn1blstm1lstm
+  relative wav mse, AFD 100
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reWavL2"]
+  relative_loss_AFD = 100.0
+
+class nn_se_rReWavL2_AFD1000(p40): # running p40
+  """
+  cnn1blstm1lstm
+  relative wav mse, AFD 1000
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reWavL2"]
+  relative_loss_AFD = 1000.0
 
 class nn_se_rSDRv1(BaseConfig): # done 15123
   """
@@ -231,7 +250,7 @@ class nn_se_rSDRv3(BaseConfig): # done 15123
   lstm_layers = 1
   loss_name = ["real_net_sdrV3"]
 
-class nn_se_rSDRv3_b005(p40): # running p40
+class nn_se_rSDRv3_b005(p40): # done p40
   """
   cnn1blstm1lstm
   SDR V3 (1-cos^2), wav add bias to cal loss.
@@ -242,7 +261,7 @@ class nn_se_rSDRv3_b005(p40): # running p40
   sdrv3_bias = 0.05
   loss_name = ["real_net_sdrV3"]
 
-class nn_se_rSDRv3_b010(p40): # running p40
+class nn_se_rSDRv3_b010(p40): # done p40
   """
   cnn1blstm1lstm
   SDR V3 (1-cos^2), wav add bias to cal loss.
@@ -253,7 +272,7 @@ class nn_se_rSDRv3_b010(p40): # running p40
   sdrv3_bias = 0.1
   loss_name = ["real_net_sdrV3"]
 
-class nn_se_rSDRv3_b050(p40): # running p40
+class nn_se_rSDRv3_b050(p40): # done p40
   """
   cnn1blstm1lstm
   SDR V3 (1-cos^2), wav add bias to cal loss.
@@ -264,7 +283,7 @@ class nn_se_rSDRv3_b050(p40): # running p40
   sdrv3_bias = 0.5
   loss_name = ["real_net_sdrV3"]
 
-class nn_se_rSDRv3_b100(BaseConfig): # running 15123
+class nn_se_rSDRv3_b100(BaseConfig): # done 15123
   """
   cnn1blstm1lstm
   SDR V3 (1-cos^2), wav add bias to cal loss.
@@ -354,6 +373,15 @@ class nn_se_rSpecMseSDRv3_1_1(p40): # done p40
   loss_name = ["real_net_spec_mse", "real_net_sdrV3"]
   loss_weight = [1.0, 1.0]
 
+class nn_se_rWavL2SDRv3_1_1(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_wav_L2", "real_net_sdrV3"]
+  loss_weight = [1.0, 1.0]
+
 class nn_se_rSTWavMSE256(p40): # done p40
   """
   cnn1blstm1lstm
@@ -414,6 +442,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rReSpecMSE1000
+PARAM = nn_se_rReWavL2_AFD1000
 
-# CUDA_VISIBLE_DEVICES=1 OMP_NUM_THREADS=4 python -m xxx._2_train
+# CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

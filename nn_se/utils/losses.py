@@ -63,6 +63,10 @@ def batch_wav_L2_loss(y1, y2):
   loss = tf.reduce_mean(tf.reduce_sum(tf.square(y1-y2), 0))
   return loss
 
+def batch_wav_relativeMSE(y1, y2, AFD):
+  loss = batch_real_relativeMSE(y1, y2, AFD)
+  return loss
+
 def batch_sdrV1_loss(est, ref):
   loss_s1 = tf.divide(tf.reduce_sum(tf.multiply(est, est), -1),
                       tf.square(tf.reduce_sum(tf.multiply(est, ref), -1)))
