@@ -154,7 +154,7 @@ class nn_se_rSpecMSE(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rSpecMSE_noStop(BaseConfig): # running 15041
+class nn_se_rSpecMSE_noStop(BaseConfig): # running 15123
   """
   cnn1blstm1lstm
   """
@@ -172,6 +172,15 @@ class nn_se_rReMagMSE100(p40): # done p40
   loss_name = ["real_net_reMagMse"]
   relative_loss_AFD = 100.0
 
+class nn_se_rReMagMSE500(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reMagMse"]
+  relative_loss_AFD = 500.0
+
 class nn_se_rReMagMSE1000(p40): # done p40
   """
   cnn1blstm1lstm
@@ -181,7 +190,7 @@ class nn_se_rReMagMSE1000(p40): # done p40
   loss_name = ["real_net_reMagMse"]
   relative_loss_AFD = 1000.0
 
-class nn_se_rReSpecMSE100(p40): # running p40
+class nn_se_rReSpecMSE100(p40): # dong p40
   """
   cnn1blstm1lstm
   """
@@ -190,7 +199,16 @@ class nn_se_rReSpecMSE100(p40): # running p40
   loss_name = ["real_net_reSpecMse"]
   relative_loss_AFD = 100.0
 
-class nn_se_rReSpecMSE1000(BaseConfig): # running 15123
+class nn_se_rReSpecMSE500(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reSpecMse"]
+  relative_loss_AFD = 500.0
+
+class nn_se_rReSpecMSE1000(BaseConfig): # done 15123
   """
   cnn1blstm1lstm
   """
@@ -436,7 +454,7 @@ class nn_se_rSTWavMSE256Map(p40): # done p40
   loss_weight = [100.0]
   net_out_mask = False
 
-class nn_se_rSTWavMSE256Map_noStop(BaseConfig): # running 15041
+class nn_se_rSTWavMSE256Map_noStop(BaseConfig): # running 15123
   """
   cnn1blstm1lstm
   short time wav as feature
@@ -468,6 +486,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rSTWavMSE256Map_noStop
+PARAM = nn_se_rReSpecMSE500
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train
