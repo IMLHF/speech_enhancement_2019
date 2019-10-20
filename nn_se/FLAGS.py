@@ -163,6 +163,15 @@ class nn_se_rSpecMSE_noStop(BaseConfig): # running 15123
   loss_name = ["real_net_spec_mse"]
   no_stop = True
 
+class nn_se_rReMagMSE50(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reMagMse"]
+  relative_loss_AFD = 50.0
+
 class nn_se_rReMagMSE100(p40): # done p40
   """
   cnn1blstm1lstm
@@ -172,7 +181,16 @@ class nn_se_rReMagMSE100(p40): # done p40
   loss_name = ["real_net_reMagMse"]
   relative_loss_AFD = 100.0
 
-class nn_se_rReMagMSE500(p40): # running p40
+class nn_se_rReMagMSE200(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reMagMse"]
+  relative_loss_AFD = 200.0
+
+class nn_se_rReMagMSE500(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -190,7 +208,16 @@ class nn_se_rReMagMSE1000(p40): # done p40
   loss_name = ["real_net_reMagMse"]
   relative_loss_AFD = 1000.0
 
-class nn_se_rReSpecMSE100(p40): # dong p40
+class nn_se_rReSpecMSE50(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reSpecMse"]
+  relative_loss_AFD = 50.0
+
+class nn_se_rReSpecMSE100(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -199,7 +226,16 @@ class nn_se_rReSpecMSE100(p40): # dong p40
   loss_name = ["real_net_reSpecMse"]
   relative_loss_AFD = 100.0
 
-class nn_se_rReSpecMSE500(p40): # running p40
+class nn_se_rReSpecMSE200(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reSpecMse"]
+  relative_loss_AFD = 200.0
+
+class nn_se_rReSpecMSE500(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -233,7 +269,17 @@ class nn_se_rWavL2(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_wav_L2"]
 
-class nn_se_rReWavL2_AFD100(p40): # running p40
+class nn_se_rReWavL2_AFD50(p40): # running p40
+  """
+  cnn1blstm1lstm
+  relative wav mse, AFD 50
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reWavL2"]
+  relative_loss_AFD = 50.0
+
+class nn_se_rReWavL2_AFD100(p40): # done p40
   """
   cnn1blstm1lstm
   relative wav mse, AFD 100
@@ -243,7 +289,17 @@ class nn_se_rReWavL2_AFD100(p40): # running p40
   loss_name = ["real_net_reWavL2"]
   relative_loss_AFD = 100.0
 
-class nn_se_rReWavL2_AFD1000(p40): # running p40
+class nn_se_rReWavL2_AFD200(p40): # running p40
+  """
+  cnn1blstm1lstm
+  relative wav mse, AFD 200
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reWavL2"]
+  relative_loss_AFD = 200.0
+
+class nn_se_rReWavL2_AFD1000(p40): # done p40
   """
   cnn1blstm1lstm
   relative wav mse, AFD 1000
@@ -401,7 +457,7 @@ class nn_se_rSpecMseSDRv3_1_1(p40): # done p40
   loss_name = ["real_net_spec_mse", "real_net_sdrV3"]
   loss_weight = [1.0, 1.0]
 
-class nn_se_rWavL2SDRv3_1_1(p40): # running p40
+class nn_se_rWavL2SDRv3_1_1(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -486,6 +542,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rReSpecMSE500
+PARAM = nn_se_rReWavL2_AFD200
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train
