@@ -119,9 +119,9 @@ def main():
       train_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.train_name)
       val_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.validation_name)
 
-    ModelC = model_builder.get_model_class()
+    ModelC, VariablesC = model_builder.get_model_class_and_var()
 
-    variables = modules.RealVariables()
+    variables = VariablesC()
     train_model = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
     # tf.compat.v1.get_variable_scope().reuse_variables()
     val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, variables, val_inputs.mixed,val_inputs.clean)
