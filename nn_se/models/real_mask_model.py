@@ -5,7 +5,7 @@ from ..FLAGS import PARAM
 from ..utils import losses
 
 
-class CNN_RNN_REAL_MASK_MODEL(Module):
+class CNN_RNN_FC_REAL_MASK_MODEL(Module):
   def forward(self, mixed_wav_batch):
     outputs = self.real_networks_forward(mixed_wav_batch)
     est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch = outputs

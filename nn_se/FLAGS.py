@@ -42,9 +42,9 @@ class BaseConfig(StaticKey):
 
   """
   @param model_name:
-  CNN_RNN_REAL_MASK_MODEL, COMPLEX_CNN_COMPLEX_MASK_MODEL, REAL_CNN_COMPLEX_MASK_MODEL
+  CNN_RNN_FC_REAL_MASK_MODEL, CCNN_CRNN_CFC_COMPLEX_MASK_NET
   """
-  model_name = "CNN_RNN_REAL_MASK_MODEL"
+  model_name = "CNN_RNN_FC_REAL_MASK_MODEL"
 
   """
   @param loss_name:
