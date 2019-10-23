@@ -165,7 +165,7 @@ class nn_se_rSpecMSE(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rSpecMSE_lstmv2(p40): # running p40
+class nn_se_rSpecMSE_lstmv2(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -189,6 +189,14 @@ class nn_se_cSpecMSE(p40): # running p40
   rnn_units = 128
   loss_name = ["real_net_spec_mse"]
   # lstmCell_implementation = 2
+
+class nn_se_cSpecMSE_lstmv2(p40): # running p40
+  blstm_layers = 1
+  lstm_layers = 1
+  model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
+  rnn_units = 128
+  loss_name = ["real_net_spec_mse"]
+  lstmCell_implementation = 2
 
 class nn_se_rSpecMSE_noStop(BaseConfig): # stop 15123
   """

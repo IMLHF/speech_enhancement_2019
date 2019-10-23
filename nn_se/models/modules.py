@@ -233,7 +233,7 @@ class Module(object):
     if PARAM.use_wav_as_feature:
       est_clean_spec_batch = est_clean_mag_batch
     else:
-      est_clean_spec_batch = tf.cast(est_clean_mag_batch, tf.dtypes.complex64) * tf.exp(1j*tf.cast(mixed_angle_batch, tf.dtypes.complex64)) # complex
+      est_clean_spec_batch = tf.complex(est_clean_mag_batch, 0.0) * tf.exp(1j*tf.complex(mixed_angle_batch, 0.0)) # complex
     _mixed_wav_len = tf.shape(mixed_wav_batch)[-1]
     _est_clean_wav_batch = misc_utils.tf_batch_istft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
     est_clean_wav_batch = tf.slice(_est_clean_wav_batch, [0,0], [-1, _mixed_wav_len]) # if stft.pad_end=True, so est_wav may be longger than mixed.
