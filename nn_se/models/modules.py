@@ -24,13 +24,15 @@ class ComplexVariables(object):
                                            initializer=tf.constant(PARAM.learning_rate))
 
     # CCNN
-    conv2d_1 = ComplexValueConv2d(8, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
-    conv2d_2 = ComplexValueConv2d(16, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
-    conv2d_3 = ComplexValueConv2d(8, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
-    conv2d_4 = ComplexValueConv2d(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
-    self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
+    self.conv2d_layers = []
     if PARAM.no_cnn:
-      self.conv2d_layers = []
+      pass
+    else:
+      conv2d_1 = ComplexValueConv2d(8, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
+      conv2d_2 = ComplexValueConv2d(16, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
+      conv2d_3 = ComplexValueConv2d(8, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
+      conv2d_4 = ComplexValueConv2d(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
+      self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
 
     # CBLSTM
     self.N_RNN_CELL = PARAM.rnn_units
@@ -68,13 +70,15 @@ class RealVariables(object):
                                            initializer=tf.constant(PARAM.learning_rate))
 
     # CNN
-    conv2d_1 = tf.keras.layers.Conv2D(16, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
-    conv2d_2 = tf.keras.layers.Conv2D(32, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
-    conv2d_3 = tf.keras.layers.Conv2D(16, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
-    conv2d_4 = tf.keras.layers.Conv2D(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
-    self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
+    self.conv2d_layers = []
     if PARAM.no_cnn:
-      self.conv2d_layers = []
+      pass
+    else:
+      conv2d_1 = tf.keras.layers.Conv2D(16, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
+      conv2d_2 = tf.keras.layers.Conv2D(32, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
+      conv2d_3 = tf.keras.layers.Conv2D(16, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
+      conv2d_4 = tf.keras.layers.Conv2D(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
+      self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
 
     # BLSTM
     self.N_RNN_CELL = PARAM.rnn_units
@@ -110,6 +114,17 @@ class RealVariables(object):
 
     # FC
     self.out_fc = tf.keras.layers.Dense(PARAM.fft_dot, name='out_fc')
+
+    # post complex net
+    self.post_complex_layers = []
+    for i in range(1, PARAM.post_clstm_layers+1):
+      complex_lstm_cell = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
+                                               implementation=PARAM.lstmCell_implementation)
+      lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='complex_lstm_%d' % i)
+      self.post_complex_layers.append(lstm)
+
+    if len(self.post_complex_layers) > 0:
+      self.post_complex_layers.append(ComplexValueDense(PARAM.fft_dot, name='out_cfc'))
 
 
 class Module(object):
@@ -293,7 +308,7 @@ class Module(object):
 
 
   @abc.abstractmethod
-  def forward(mixed_wav_batch):
+  def forward(self, mixed_wav_batch):
     """
     Returns:
       forward_outputs: pass to get_loss
@@ -304,64 +319,16 @@ class Module(object):
         "forward not implement, code: 939iddfoollvoae")
 
 
+  @abc.abstractmethod
   def get_loss(self, forward_outputs):
-    est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch = forward_outputs
-
-    # region losses
-    ## frequency domain loss
-    self.real_net_mag_mse = losses.batch_time_fea_real_mse(est_clean_mag_batch, self.clean_mag_batch)
-    self.real_net_reMagMse = losses.batch_real_relativeMSE(est_clean_mag_batch, self.clean_mag_batch, PARAM.relative_loss_AFD)
-    self.real_net_spec_mse = losses.batch_time_fea_complex_mse(est_clean_spec_batch, self.clean_spec_batch)
-    self.real_net_reSpecMse = losses.batch_complex_relativeMSE(est_clean_spec_batch, self.clean_spec_batch, PARAM.relative_loss_AFD)
-    self.real_net_specTCosSimV1 = losses.batch_complexspec_timeaxis_cos_sim_V1(est_clean_spec_batch, self.clean_spec_batch) # *0.167
-    self.real_net_specFCosSimV1 = losses.batch_complexspec_frequencyaxis_cos_sim_V1(est_clean_spec_batch, self.clean_spec_batch) # *0.167
-    self.real_net_specTFCosSimV1 = losses.batch_complexspec_TF_cos_sim_V1(est_clean_spec_batch, self.clean_spec_batch) # *0.167
-
-    ## time domain loss
-    self.real_net_wav_L1 = losses.batch_wav_L1_loss(est_clean_wav_batch, self.clean_wav_batch)*10.0
-    self.real_net_wav_L2 = losses.batch_wav_L2_loss(est_clean_wav_batch, self.clean_wav_batch)*100.0
-    self.real_net_reWavL2 = losses.batch_wav_relativeMSE(est_clean_wav_batch, self.clean_wav_batch, PARAM.relative_loss_AFD)
-    self.real_net_sdrV1 = losses.batch_sdrV1_loss(est_clean_wav_batch, self.clean_wav_batch)
-    self.real_net_sdrV2 = losses.batch_sdrV2_loss(est_clean_wav_batch, self.clean_wav_batch)
-    self.real_net_sdrV3 = losses.batch_sdrV3_loss(est_clean_wav_batch, self.clean_wav_batch, PARAM.sdrv3_bias) # *0.167
-    if PARAM.sdrv3_bias:
-      assert PARAM.sdrv3_bias > 0.0, 'sdrv3_bias is constrained larger than zero.'
-      self.real_net_sdrV3 *= 1.0 + 60 * PARAM.sdrv3_bias
-    self.real_net_cosSimV1 = losses.batch_cosSimV1_loss(est_clean_wav_batch, self.clean_wav_batch) # *0.167
-    self.real_net_cosSimV1WT10 = self.real_net_cosSimV1*0.167 # loss weighted to 10 level
-    self.real_net_cosSimV2 = losses.batch_cosSimV2_loss(est_clean_wav_batch, self.clean_wav_batch) # *0.334
-    self.real_net_stSDRV3 = losses.batch_short_time_sdrV3_loss(est_clean_wav_batch, self.clean_wav_batch,
-                                                               PARAM.st_frame_length_for_loss,
-                                                               PARAM.st_frame_step_for_loss)
-    # engregion losses
-
-    loss = 0
-    loss_names = PARAM.loss_name
-
-    for i, name in enumerate(loss_names):
-      loss_t = {
-        'real_net_mag_mse': self.real_net_mag_mse,
-        'real_net_reMagMse': self.real_net_reMagMse,
-        'real_net_spec_mse': self.real_net_spec_mse,
-        'real_net_reSpecMse': self.real_net_reSpecMse,
-        'real_net_wav_L1': self.real_net_wav_L1,
-        'real_net_wav_L2': self.real_net_wav_L2,
-        'real_net_reWavL2': self.real_net_reWavL2,
-        'real_net_sdrV1': self.real_net_sdrV1,
-        'real_net_sdrV2': self.real_net_sdrV2,
-        'real_net_sdrV3': self.real_net_sdrV3,
-        'real_net_cosSimV1': self.real_net_cosSimV1,
-        'real_net_cosSimV1WT10': self.real_net_cosSimV1WT10,
-        'real_net_cosSimV2': self.real_net_cosSimV2,
-        'real_net_specTCosSimV1': self.real_net_specTCosSimV1,
-        'real_net_specFCosSimV1': self.real_net_specFCosSimV1,
-        'real_net_specTFCosSimV1': self.real_net_specTFCosSimV1,
-        'real_net_stSDRV3': self.real_net_stSDRV3,
-      }[name]
-      if len(PARAM.loss_weight) > 0:
-        loss_t *= PARAM.loss_weight[i]
-      loss += loss_t
-    return loss
+    """
+    Returns:
+      loss
+    """
+    import traceback
+    traceback.print_exc()
+    raise NotImplementedError(
+        "get_loss not implement, code: 67hjrethfd")
 
 
   def change_lr(self, sess, new_lr):

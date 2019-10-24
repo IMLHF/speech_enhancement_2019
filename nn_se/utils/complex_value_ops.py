@@ -17,3 +17,9 @@ def check_nan(a, name):
   a_imag = tf.check_numerics(a_imag, name+"_imag is nan")
   a = tf.complex(a_real, a_imag)
   return a
+
+def tf_complex_mul_real(v_com, v_real):
+  v_com_real = tf.real(v_com) * v_real
+  v_com_imag = tf.imag(v_com) * v_real
+  v = tf.complex(v_com_real, v_com_imag)
+  return v
