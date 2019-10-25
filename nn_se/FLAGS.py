@@ -42,7 +42,7 @@ class BaseConfig(StaticKey):
 
   """
   @param model_name:
-  CNN_RNN_FC_REAL_MASK_MODEL, CCNN_CRNN_CFC_COMPLEX_MASK_MODEL
+  CNN_RNN_FC_REAL_MASK_MODEL, CCNN_CRNN_CFC_COMPLEX_MASK_MODEL, RC_HYBIRD_MODEL
   """
   model_name = "CNN_RNN_FC_REAL_MASK_MODEL"
 
@@ -66,7 +66,8 @@ class BaseConfig(StaticKey):
   no_cnn = False
   blstm_layers = 2
   lstm_layers = 0
-  post_clstm_layers = 0
+  post_clstm_layers = 2
+  post_complex_net_output = 'cmask' # cmask | cresidual | cspec
   rnn_units = 256
   lstmCell_implementation = 1
   fft_dot = 129
@@ -175,6 +176,30 @@ class nn_se_rSpecMSE_lstmv2(p40): # done p40
   loss_name = ["real_net_spec_mse"]
   lstmCell_implementation = 2
 
+class nn_se_hybirdSpecMSE_001(p40): # running p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 1.0]
+  post_complex_net_output = 'cmask'
+  GPU_PARTION = 0.32 #
+
+class nn_se_hybirdSpecMSE_002(p40): # running p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 1.0]
+  post_complex_net_output = 'cresidual'
+  GPU_PARTION = 0.32 #
+
 class nn_se_cSpecMSE_doubleRnnVar(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
@@ -204,7 +229,7 @@ class nn_se_cSpecMSE_real05(p40): # running p40
 
 class nn_se_cSpecMSE_cRNNno05(p40): # running p40
   """
-  in complexLSTMCell, i and f never multiply 0.5.
+  in complexLSTMCell, i and f multiply 0.7.
   """
   blstm_layers = 1
   lstm_layers = 1
@@ -636,6 +661,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_cSpecMSE_lstmv2_big
+PARAM = nn_se_hybirdSpecMSE_002
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

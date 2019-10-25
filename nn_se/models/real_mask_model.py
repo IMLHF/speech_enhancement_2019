@@ -60,6 +60,7 @@ class CNN_RNN_FC_REAL_MASK_MODEL(Module):
     loss_names = PARAM.loss_name
 
     for i, name in enumerate(loss_names):
+      name = name.replace('comp_net_', 'real_net_')
       loss_t = {
         'real_net_mag_mse': self.real_net_mag_mse,
         'real_net_reMagMse': self.real_net_reMagMse,
