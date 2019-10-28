@@ -224,8 +224,10 @@ class Module(object):
     outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot])
 
     # BLSTM
+    self.blstm_outputs = []
     for blstm in self.variables.blstm_layers:
       outputs = blstm(outputs, training=training)
+      self.blstm_outputs.append(outputs)
 
     # LSTM
     for lstm in self.variables.lstm_layers:
