@@ -38,8 +38,8 @@ class ComplexVariables(object):
     self.N_RNN_CELL = PARAM.rnn_units
     self.blstm_layers = []
     for i in range(1, PARAM.blstm_layers+1):
-      complex_lstm_cell_f = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.lstmCell_implementation)
-      complex_lstm_cell_b = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.lstmCell_implementation)
+      complex_lstm_cell_f = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.clstmCell_implementation)
+      complex_lstm_cell_b = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.clstmCell_implementation)
       forward_lstm = tf.keras.layers.RNN(complex_lstm_cell_f, return_sequences=True, name='fwlstm_%d' % i)
       backward_lstm = tf.keras.layers.RNN(complex_lstm_cell_b, return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
       blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
@@ -50,7 +50,7 @@ class ComplexVariables(object):
     self.lstm_layers = []
     for i in range(1, PARAM.lstm_layers+1):
       complex_lstm_cell = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
-                                               implementation=PARAM.lstmCell_implementation)
+                                               implementation=PARAM.clstmCell_implementation)
       lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='lstm_%d' % i)
       self.lstm_layers.append(lstm)
 
@@ -84,9 +84,9 @@ class RealVariables(object):
     self.N_RNN_CELL = PARAM.rnn_units
     self.blstm_layers = []
     for i in range(1, PARAM.blstm_layers+1):
-      forward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.lstmCell_implementation,
+      forward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.rlstmCell_implementation,
                                           return_sequences=True, name='fwlstm_%d' % i)
-      backward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.lstmCell_implementation,
+      backward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.rlstmCell_implementation,
                                            return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
       blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
                                             merge_mode='concat', name='blstm_%d' % i)
@@ -108,7 +108,7 @@ class RealVariables(object):
     self.lstm_layers = []
     for i in range(1, PARAM.lstm_layers+1):
       lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
-                                  return_sequences=True, implementation=PARAM.lstmCell_implementation,
+                                  return_sequences=True, implementation=PARAM.rlstmCell_implementation,
                                   name='lstm_%d' % i)
       self.lstm_layers.append(lstm)
 
@@ -126,7 +126,7 @@ class RCHybirdVariables(RealVariables):
     self.post_complex_layers = []
     for i in range(1, PARAM.post_clstm_layers+1):
       complex_lstm_cell = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
-                                               implementation=PARAM.lstmCell_implementation)
+                                               implementation=PARAM.clstmCell_implementation)
       lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='complex_lstm_%d' % i)
       self.post_complex_layers.append(lstm)
 
@@ -244,7 +244,7 @@ class Module(object):
       mixed_mag_batch = mixed_spec_batch
     else:
       mixed_mag_batch = tf.math.abs(mixed_spec_batch)
-    mixed_angle_batch = tf.math.angle(mixed_spec_batch)
+    self.mixed_angle_batch = tf.math.angle(mixed_spec_batch)
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
     mask = self.CNN_RNN_FC(mixed_mag_batch, training)
 
@@ -252,10 +252,11 @@ class Module(object):
       est_clean_mag_batch = tf.multiply(mask, mixed_mag_batch) # mag estimated
     else:
       est_clean_mag_batch = mask
+
     if PARAM.use_wav_as_feature:
       est_clean_spec_batch = est_clean_mag_batch
     else:
-      est_clean_spec_batch = tf.complex(est_clean_mag_batch, 0.0) * tf.exp(1j*tf.complex(mixed_angle_batch, 0.0)) # complex
+      est_clean_spec_batch = tf.complex(est_clean_mag_batch, 0.0) * tf.exp(tf.complex(0.0, self.mixed_angle_batch)) # complex
     _mixed_wav_len = tf.shape(mixed_wav_batch)[-1]
     _est_clean_wav_batch = misc_utils.tf_batch_istft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
     est_clean_wav_batch = tf.slice(_est_clean_wav_batch, [0,0], [-1, _mixed_wav_len]) # if stft.pad_end=True, so est_wav may be longger than mixed.
@@ -263,9 +264,14 @@ class Module(object):
     return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch
 
 
-  def post_complex_networks_forward(self, input_spec_batch, mixed_wav_len):
+  def post_complex_networks_forward(self, input_mag_batch, mixed_angle_batch, mixed_wav_len):
+
     assert PARAM.post_clstm_layers > 0, 'hybired rc model require PARAM.post_clstm_layers > 0 to use complex value post net'
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
+
+    if PARAM.complex_clip_mag is True:
+      input_mag_batch = tf.clip_by_value(input_mag_batch, 0.0, float(PARAM.complex_clip_mag_max))
+    input_spec_batch = tf.complex(input_mag_batch, 0.0) * tf.exp(tf.complex(0.0, mixed_angle_batch))
     outputs = input_spec_batch
     _batch_size = tf.shape(outputs)[0]
     # print(outputs.shape.as_list(), 'cnn_shape')
@@ -334,6 +340,14 @@ class Module(object):
   def complex_networks_forward(self, mixed_wav_batch):
     mixed_spec_batch = misc_utils.tf_batch_stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step)
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
+    # clip mag
+    if PARAM.complex_clip_mag is True:
+      mixed_mag_batch = tf.abs(mixed_spec_batch)
+      # self.debug_mag = mixed_mag_batch
+      mixed_angle_batch = tf.angle(mixed_spec_batch)
+      mixed_mag_batch = tf.clip_by_value(mixed_mag_batch, 0.0, float(PARAM.complex_clip_mag_max))
+      mixed_spec_batch = tf.complex(mixed_mag_batch, 0.0) * tf.exp(tf.complex(0.0, mixed_angle_batch))
+
     complex_mask = self.CCNN_CRNN_CFC(mixed_spec_batch, training)
     if PARAM.net_out_mask:
       est_clean_spec_batch = c_ops.tf_complex_multiply(complex_mask, mixed_spec_batch) # mag estimated

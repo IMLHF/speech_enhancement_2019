@@ -68,8 +68,12 @@ class BaseConfig(StaticKey):
   lstm_layers = 0
   post_clstm_layers = 2
   post_complex_net_output = 'cmask' # cmask | cresidual | cspec
+  complex_clip_mag = False
+  complex_clip_label_mag = False
+  complex_clip_mag_max = 1.5
   rnn_units = 256
-  lstmCell_implementation = 1
+  rlstmCell_implementation = 1
+  clstmCell_implementation = 2
   fft_dot = 129
   max_keep_ckpt = 30
   learning_rate = 0.001
@@ -100,7 +104,7 @@ class debug(p40):
   blstm_layers = 1
   lstm_layers = 1
   no_cnn = False
-  model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
+  model_name = "CNN_RNN_FC_REAL_MASK_MODEL"
 
 class nn_se_lr0001(BaseConfig): # done 15123
   """
@@ -174,9 +178,9 @@ class nn_se_rSpecMSE_lstmv2(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
-  lstmCell_implementation = 2
+  rlstmCell_implementation = 2
 
-class nn_se_hybirdSpecMSE_001(p40): # running p40
+class nn_se_hybirdSpecMSE_001(p40): # done p40
   """
   cnn1blstm1lstm+2clstm1cdnn
   """
@@ -188,7 +192,7 @@ class nn_se_hybirdSpecMSE_001(p40): # running p40
   post_complex_net_output = 'cmask'
   GPU_PARTION = 0.32 #
 
-class nn_se_hybirdSpecMSE_002(p40): # running p40
+class nn_se_hybirdSpecMSE_002(p40): # done p40
   """
   cnn1blstm1lstm+2clstm1cdnn
   """
@@ -200,13 +204,99 @@ class nn_se_hybirdSpecMSE_002(p40): # running p40
   post_complex_net_output = 'cresidual'
   GPU_PARTION = 0.32 #
 
+class nn_se_hybirdSpecMSE_003(p40): # done p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 1.0]
+  post_complex_net_output = 'cspec'
+  GPU_PARTION = 0.32 #
+
+class nn_se_hybirdSpecMSE_004(p40): # running p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 0.5]
+  post_complex_net_output = 'cresidual'
+  GPU_PARTION = 0.32 #
+
+class nn_se_hybirdSpecMSE_005(p40): # running p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [0.5, 1.0]
+  post_complex_net_output = 'cresidual'
+  GPU_PARTION = 0.32 #
+
+class nn_se_hybirdSpecMSEclipMag_001(p40): # done p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  clip post complex lstm inputs mag
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 1.0]
+  post_complex_net_output = 'cmask'
+  GPU_PARTION = 0.32 #
+  complex_clip_mag = True
+  complex_clip_mag_max = 1.5
+
+class nn_se_hybirdSpecMSEclipMag_002(p40): # running p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  clip post complex lstm inputs mag
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 3.0]
+  post_complex_net_output = 'cresidual'
+  GPU_PARTION = 0.32 #
+  complex_clip_mag = True
+  complex_clip_mag_max = 1.5
+  rlstmCell_implementation = 1
+  clstmCell_implementation = 2
+
+class nn_se_hybirdSpecMSEclipMag_003(p40): # running p40
+  """
+  cnn1blstm1lstm+2clstm1cdnn
+  clip post complex lstm inputs mag
+  """
+  model_name = "RC_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 3.0]
+  post_complex_net_output = 'cresidual'
+  GPU_PARTION = 0.32 #
+  complex_clip_mag = True
+  complex_clip_label_mag = True
+  complex_clip_mag_max = 1.5
+  rlstmCell_implementation = 1
+  clstmCell_implementation = 2
+
 class nn_se_cSpecMSE_doubleRnnVar(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   loss_name = ["real_net_spec_mse"]
   GPU_PARTION = 0.5
-  # lstmCell_implementation = 2
+  # clstmCell_implementation = 2
 
 class nn_se_cSpecMSE(p40): # done p40
   blstm_layers = 1
@@ -214,9 +304,21 @@ class nn_se_cSpecMSE(p40): # done p40
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   rnn_units = 128
   loss_name = ["real_net_spec_mse"]
-  # lstmCell_implementation = 2
+  # clstmCell_implementation = 2
 
-class nn_se_cSpecMSE_real05(p40): # running p40
+class nn_se_cSpecMSE_clipMag(p40): # done p40
+  """
+  clip mag < 1.5
+  """
+  complex_clip_mag = True
+  complex_clip_mag_max = 1.5
+  blstm_layers = 1
+  lstm_layers = 1
+  model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
+  rnn_units = 128
+  loss_name = ["real_net_spec_mse"]
+
+class nn_se_cSpecMSE_real05(p40): # done p40
   """
   in complexLSTMCell, i and f multiply 0.5 not 0.5+0j
   """
@@ -225,9 +327,9 @@ class nn_se_cSpecMSE_real05(p40): # running p40
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   rnn_units = 128
   loss_name = ["real_net_spec_mse"]
-  # lstmCell_implementation = 2
+  # clstmCell_implementation = 2
 
-class nn_se_cSpecMSE_cRNNno05(p40): # running p40
+class nn_se_cSpecMSE_cRNNno05(p40): # done p40
   """
   in complexLSTMCell, i and f multiply 0.7.
   """
@@ -236,7 +338,7 @@ class nn_se_cSpecMSE_cRNNno05(p40): # running p40
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   rnn_units = 128
   loss_name = ["real_net_spec_mse"]
-  # lstmCell_implementation = 2
+  # clstmCell_implementation = 2
 
 class nn_se_cSpecMSE_lstmv2(p40): # done p40
   blstm_layers = 1
@@ -244,33 +346,51 @@ class nn_se_cSpecMSE_lstmv2(p40): # done p40
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   rnn_units = 128
   loss_name = ["real_net_spec_mse"]
-  lstmCell_implementation = 2
+  clstmCell_implementation = 2
 
-class nn_se_cSpecMSE_lstmv2_big(p40): # running p40
+class nn_se_cSpecMSE_lstmv2_big(p40): # done p40
   blstm_layers = 1
   lstm_layers = 2
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   rnn_units = 512
   loss_name = ["real_net_spec_mse"]
-  lstmCell_implementation = 2
+  clstmCell_implementation = 2
   # GPU_PARTION = 0.7
 
-class nn_se_cSpecMSE_lstmv2_lr0001(p40): # running p40
+class nn_se_cSpecMSE_lstmv2_lr01(p40): # stop p40
   blstm_layers = 1
   lstm_layers = 1
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   rnn_units = 128
   loss_name = ["real_net_spec_mse"]
-  lstmCell_implementation = 2
+  clstmCell_implementation = 2
+  learning_rate = 0.01
+
+class nn_se_cSpecMSE_lstmv2_lr003(p40): # done p40
+  blstm_layers = 1
+  lstm_layers = 1
+  model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
+  rnn_units = 128
+  loss_name = ["real_net_spec_mse"]
+  clstmCell_implementation = 2
+  learning_rate = 0.003
+
+class nn_se_cSpecMSE_lstmv2_lr0001(p40): # done p40
+  blstm_layers = 1
+  lstm_layers = 1
+  model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
+  rnn_units = 128
+  loss_name = ["real_net_spec_mse"]
+  clstmCell_implementation = 2
   learning_rate = 0.0001
 
-class nn_se_cSpecMSE_lstmv2_nocnn(p40): # running p40
+class nn_se_cSpecMSE_lstmv2_nocnn(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   model_name = "CCNN_CRNN_CFC_COMPLEX_MASK_MODEL"
   rnn_units = 128
   loss_name = ["real_net_spec_mse"]
-  lstmCell_implementation = 2
+  clstmCell_implementation = 2
   no_cnn = True
 
 class nn_se_rSpecMSE_noStop(BaseConfig): # stop 15123
@@ -661,6 +781,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_hybirdSpecMSE_002
+PARAM = nn_se_hybirdSpecMSEclipMag_003
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

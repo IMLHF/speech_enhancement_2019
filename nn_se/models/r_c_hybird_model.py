@@ -25,7 +25,7 @@ class RC_HYBIRD_MODEL(Module):
 
     _mixed_wav_len = tf.shape(mixed_wav_batch)[-1]
 
-    c_outputs = self.post_complex_networks_forward(r_est_clean_spec_batch, _mixed_wav_len)
+    c_outputs = self.post_complex_networks_forward(r_est_clean_mag_batch, self.mixed_angle_batch, _mixed_wav_len)
     c_est_clean_mag_batch, c_est_clean_spec_batch, c_est_clean_wav_batch = c_outputs
     return (r_est_clean_mag_batch, r_est_clean_spec_batch, r_est_clean_wav_batch,
             c_est_clean_mag_batch, c_est_clean_spec_batch, c_est_clean_wav_batch)
@@ -66,11 +66,18 @@ class RC_HYBIRD_MODEL(Module):
     ## frequency domain loss
     self.comp_net_mag_mse = losses.batch_time_fea_real_mse(c_est_clean_mag_batch, self.clean_mag_batch)
     self.comp_net_reMagMse = losses.batch_real_relativeMSE(c_est_clean_mag_batch, self.clean_mag_batch, PARAM.relative_loss_AFD)
-    self.comp_net_spec_mse = losses.batch_time_fea_complex_mse(c_est_clean_spec_batch, self.clean_spec_batch)
-    self.comp_net_reSpecMse = losses.batch_complex_relativeMSE(c_est_clean_spec_batch, self.clean_spec_batch, PARAM.relative_loss_AFD)
-    self.comp_net_specTCosSimV1 = losses.batch_complexspec_timeaxis_cos_sim_V1(c_est_clean_spec_batch, self.clean_spec_batch) # *0.167
-    self.comp_net_specFCosSimV1 = losses.batch_complexspec_frequencyaxis_cos_sim_V1(c_est_clean_spec_batch, self.clean_spec_batch) # *0.167
-    self.comp_net_specTFCosSimV1 = losses.batch_complexspec_TF_cos_sim_V1(c_est_clean_spec_batch, self.clean_spec_batch) # *0.167
+
+    # TODO: testing
+    cliped_clean_spec_batch = self.clean_spec_batch
+    if PARAM.complex_clip_label_mag:
+      cliped_clean_mag_batch = tf.clip_by_value(self.clean_mag_batch, 0.0, float(PARAM.complex_clip_mag_max))
+      cliped_clean_spec_batch = tf.complex(cliped_clean_mag_batch, 0.0) * tf.exp(tf.complex(0.0, tf.angle(self.clean_spec_batch)))
+
+    self.comp_net_spec_mse = losses.batch_time_fea_complex_mse(c_est_clean_spec_batch, cliped_clean_spec_batch)
+    self.comp_net_reSpecMse = losses.batch_complex_relativeMSE(c_est_clean_spec_batch, cliped_clean_spec_batch, PARAM.relative_loss_AFD)
+    self.comp_net_specTCosSimV1 = losses.batch_complexspec_timeaxis_cos_sim_V1(c_est_clean_spec_batch, cliped_clean_spec_batch) # *0.167
+    self.comp_net_specFCosSimV1 = losses.batch_complexspec_frequencyaxis_cos_sim_V1(c_est_clean_spec_batch, cliped_clean_spec_batch) # *0.167
+    self.comp_net_specTFCosSimV1 = losses.batch_complexspec_TF_cos_sim_V1(c_est_clean_spec_batch, cliped_clean_spec_batch) # *0.167
 
     ## time domain loss
     self.comp_net_wav_L1 = losses.batch_wav_L1_loss(c_est_clean_wav_batch, self.clean_wav_batch)*10.0
