@@ -29,6 +29,11 @@ class CNN_RNN_FC_REAL_MASK_MODEL(Module):
     est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch = forward_outputs
 
     # region losses
+
+    ## assist loss
+    f, b = tf.split(self.blstm_outputs[-1], 2, axis=-1) # f,b: [batch, frame, RNN_SIZE]
+    self.real_net_last_blstm_fb_orthogonal = tf.reduce_sum(tf.reduce_mean(tf.square(losses.vec_dot_mul(f, b)), -1))
+
     ## frequency domain loss
     self.real_net_mag_mse = losses.batch_time_fea_real_mse(est_clean_mag_batch, self.clean_mag_batch)
     self.real_net_reMagMse = losses.batch_real_relativeMSE(est_clean_mag_batch, self.clean_mag_batch, PARAM.relative_loss_AFD)
@@ -79,6 +84,7 @@ class CNN_RNN_FC_REAL_MASK_MODEL(Module):
         'real_net_specFCosSimV1': self.real_net_specFCosSimV1,
         'real_net_specTFCosSimV1': self.real_net_specTFCosSimV1,
         'real_net_stSDRV3': self.real_net_stSDRV3,
+        'real_net_last_blstm_fb_orthogonal': self.real_net_last_blstm_fb_orthogonal,
       }[name]
       if len(PARAM.loss_weight) > 0:
         loss_t *= PARAM.loss_weight[i]

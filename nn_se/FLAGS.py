@@ -52,6 +52,7 @@ class BaseConfig(StaticKey):
   real_net_reMagMse, real_net_reSpecMse, real_net_reWavL2,
   real_net_sdrV1, real_net_sdrV2, real_net_sdrV3, real_net_stSDRV3, real_net_cosSimV1, real_net_cosSimV1WT10, real_net_cosSimV2,
   real_net_specTCosSimV1, real_net_specFCosSimV1, real_net_specTFCosSimV1,
+  real_net_last_blstm_fb_orthogonal,
   """
   relative_loss_AFD = 1000.0
   st_frame_length_for_loss = 512
@@ -170,6 +171,15 @@ class nn_se_rSpecMSE(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
+
+class nn_se_rSpecMSEBlstmOrth(BaseConfig): # running 15123
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_weight = [1.0, 1.0]
+  loss_name = ["real_net_spec_mse", "real_net_last_blstm_fb_orthogonal"]
 
 class nn_se_rSpecMSE_lstmv2(p40): # done p40
   """
@@ -402,6 +412,15 @@ class nn_se_rSpecMSE_noStop(BaseConfig): # stop 15123
   loss_name = ["real_net_spec_mse"]
   no_stop = True
 
+class nn_se_rReMagMSE20(p40): # runnnig p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reMagMse"]
+  relative_loss_AFD = 20.0
+
 class nn_se_rReMagMSE50(p40): # done p40
   """
   cnn1blstm1lstm
@@ -446,6 +465,15 @@ class nn_se_rReMagMSE1000(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
   relative_loss_AFD = 1000.0
+
+class nn_se_rReSpecMSE20(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reSpecMse"]
+  relative_loss_AFD = 20.0
 
 class nn_se_rReSpecMSE50(p40): # done p40
   """
@@ -507,6 +535,16 @@ class nn_se_rWavL2(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_wav_L2"]
+
+class nn_se_rReWavL2_AFD20(p40): # running p40
+  """
+  cnn1blstm1lstm
+  relative wav mse, AFD 20
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_reWavL2"]
+  relative_loss_AFD = 20.0
 
 class nn_se_rReWavL2_AFD50(p40): # done p40
   """
@@ -781,6 +819,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_hybirdSpecMSEclipMag_003
+PARAM = nn_se_rReWavL2_AFD20
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train
