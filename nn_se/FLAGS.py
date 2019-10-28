@@ -42,7 +42,8 @@ class BaseConfig(StaticKey):
 
   """
   @param model_name:
-  CNN_RNN_FC_REAL_MASK_MODEL, CCNN_CRNN_CFC_COMPLEX_MASK_MODEL, RC_HYBIRD_MODEL
+  CNN_RNN_FC_REAL_MASK_MODEL, CCNN_CRNN_CFC_COMPLEX_MASK_MODEL,
+  RC_HYBIRD_MODEL, RR_HYBIRD_MODEL
   """
   model_name = "CNN_RNN_FC_REAL_MASK_MODEL"
 
@@ -67,7 +68,7 @@ class BaseConfig(StaticKey):
   no_cnn = False
   blstm_layers = 2
   lstm_layers = 0
-  post_clstm_layers = 2
+  post_lstm_layers = 2
   post_complex_net_output = 'cmask' # cmask | cresidual | cspec
   complex_clip_mag = False
   complex_clip_label_mag = False
@@ -294,6 +295,21 @@ class nn_se_hybirdSpecMSEclipMag_003(p40): # running p40
   loss_weight = [1.0, 3.0]
   post_complex_net_output = 'cresidual'
   GPU_PARTION = 0.32 #
+  complex_clip_mag = True
+  complex_clip_label_mag = True
+  complex_clip_mag_max = 1.5
+  rlstmCell_implementation = 1
+  clstmCell_implementation = 2
+
+class nn_se_RRhybirdSpecMSE_001(p40): # running p40
+  # cnn1blstm1lstm+2lstm1dnn
+  model_name = "RR_HYBIRD_MODEL"
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
+  loss_weight = [1.0, 3.0]
+  post_complex_net_output = 'cresidual'
+  GPU_PARTION = 0.30 #
   complex_clip_mag = True
   complex_clip_label_mag = True
   complex_clip_mag_max = 1.5
@@ -819,6 +835,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rReWavL2_AFD20
+PARAM = nn_se_RRhybirdSpecMSE_001
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

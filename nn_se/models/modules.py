@@ -124,7 +124,7 @@ class RCHybirdVariables(RealVariables):
     super(RCHybirdVariables, self).__init__()
     # post complex net
     self.post_complex_layers = []
-    for i in range(1, PARAM.post_clstm_layers+1):
+    for i in range(1, PARAM.post_lstm_layers+1):
       complex_lstm_cell = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
                                                implementation=PARAM.clstmCell_implementation)
       lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='complex_lstm_%d' % i)
@@ -133,6 +133,23 @@ class RCHybirdVariables(RealVariables):
     if len(self.post_complex_layers) > 0:
       self.post_complex_layers.append(ComplexValueDense(PARAM.fft_dot, name='out_cfc'))
 
+
+class RRHybirdVariables(RealVariables):
+  """
+  Real Real-post hybird model  Variables
+  """
+  def __init__(self):
+    super(RRHybirdVariables, self).__init__()
+    # post complex net
+    self.post_real_layers = []
+    for i in range(1, PARAM.post_lstm_layers+1):
+      lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
+                                  implementation=PARAM.clstmCell_implementation,
+                                  return_sequences=True, name='real_post_lstm_%d' % i)
+      self.post_real_layers.append(lstm)
+
+    if len(self.post_real_layers) > 0:
+      self.post_real_layers.append(tf.keras.layers.Dense(PARAM.fft_dot*2, name='out_fc'))
 
 class Module(object):
   """
@@ -268,10 +285,50 @@ class Module(object):
 
     return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch
 
+  def post_real_networks_forward(self, input_mag_batch,  mixed_angle_batch, mixed_wav_len):
+    assert PARAM.post_lstm_layers > 0, 'hybired rr model require PARAM.post_lstm_layers > 0 to use complex value post net'
+    training = (self.mode == PARAM.MODEL_TRAIN_KEY)
+
+    if PARAM.complex_clip_mag is True:
+      input_mag_batch = tf.clip_by_value(input_mag_batch, 0.0, float(PARAM.complex_clip_mag_max))
+    input_spec_batch = tf.complex(input_mag_batch, 0.0) * tf.exp(tf.complex(0.0, mixed_angle_batch))
+
+    outputs = tf.concat([tf.math.real(input_spec_batch), tf.math.imag(input_spec_batch)],
+                        axis=-1)
+    _batch_size = tf.shape(outputs)[0]
+    # print(outputs.shape.as_list(), 'cnn_shape')
+
+    outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot*2])
+
+    # CLSTM
+    for lstm in self.variables.post_real_layers[:-1]:
+      outputs = lstm(outputs, training=training)
+
+    # CFC
+    outputs = tf.reshape(outputs, [-1, self.variables.N_RNN_CELL])
+    outputs = self.variables.post_real_layers[-1](outputs)
+    outputs = tf.reshape(outputs, [_batch_size, -1, PARAM.fft_dot*2])
+    outputs_real, outputs_imag = tf.split(outputs, 2, axis=-1)
+    outputs = tf.complex(outputs_real, outputs_imag)
+
+    if PARAM.post_complex_net_output == 'cmask': # cmask, cresidual, cspec
+      est_clean_spec_batch = tf.multiply(outputs, input_spec_batch)
+    elif PARAM.post_complex_net_output == 'cresidual':
+      est_clean_spec_batch = tf.add(outputs, input_spec_batch)
+    elif PARAM.post_complex_net_output == 'cspec':
+      est_clean_spec_batch = outputs
+
+    _mixed_wav_len = mixed_wav_len
+    _est_clean_wav_batch = misc_utils.tf_batch_istft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
+    est_clean_wav_batch = tf.slice(_est_clean_wav_batch, [0,0], [-1, _mixed_wav_len]) # if stft.pad_end=True, so est_wav may be longger than mixed.
+
+    est_clean_mag_batch = tf.math.abs(est_clean_spec_batch)
+
+    return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch
 
   def post_complex_networks_forward(self, input_mag_batch, mixed_angle_batch, mixed_wav_len):
 
-    assert PARAM.post_clstm_layers > 0, 'hybired rc model require PARAM.post_clstm_layers > 0 to use complex value post net'
+    assert PARAM.post_lstm_layers > 0, 'hybired rc model require PARAM.post_lstm_layers > 0 to use complex value post net'
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
 
     if PARAM.complex_clip_mag is True:
