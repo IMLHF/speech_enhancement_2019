@@ -80,13 +80,17 @@ def eval_one_epoch(sess, val_model):
   while True:
     try:
       (loss,
-       real_net_mag_mse, real_net_spec_mse,
-       real_net_wavL1, real_net_wavL2,
+       #  debug_mag,
+       #  real_net_mag_mse, real_net_spec_mse,
+       #  real_net_wavL1, real_net_wavL2,
        ) = sess.run([val_model.loss,
-                     val_model.real_net_mag_mse, val_model.real_net_spec_mse,
-                     val_model.real_net_wav_L1, val_model.real_net_wav_L2,
+                     #  val_model.debug_mag,
+                     #  val_model.real_net_mag_mse, val_model.real_net_spec_mse,
+                     #  val_model.real_net_wav_L1, val_model.real_net_wav_L2,
                      ])
       # print("\n", loss, real_net_mag_mse, real_net_spec_mse, real_net_wavL1, real_net_wavL2, flush=True)
+      # import numpy as np
+      # print(np.mean(debug_mag), np.var(debug_mag), np.min(debug_mag), np.max(debug_mag), loss, flush=True)
       total_loss += loss
       i += 1
       print("\rvalidate: %d/%d, cost %.2fs          " % (i, total_i, time.time()-ont_batch_time),
