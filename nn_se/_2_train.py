@@ -36,15 +36,18 @@ def train_one_epoch(sess, train_model, train_log_file):
   total_i = PARAM.n_train_set_records//PARAM.batch_size
   while True:
     try:
-      (_, loss, lr, global_step
+      (_, loss, lr, global_step,
+       d_loss,
        ) = sess.run([train_model.train_op,
                      train_model.loss,
                      train_model.lr,
                      train_model.global_step,
+                     train_model.d_loss
                      ])
       tr_loss += loss
       i += 1
-      print("\rtrain: %d/%d, cost %.2fs         " % (i, total_i, time.time()-one_batch_time),
+      print("\rtrain: %d/%d, cost %.2fs, loss %.2f, d_loss %.2f         " % (
+          i, total_i, time.time()-one_batch_time,loss, d_loss),
             flush=True, end="")
       one_batch_time = time.time()
       if i % PARAM.batches_to_logging == 0:
@@ -80,10 +83,12 @@ def eval_one_epoch(sess, val_model):
   while True:
     try:
       (loss,
+       d_loss,
        #  debug_mag,
        #  real_net_mag_mse, real_net_spec_mse,
        #  real_net_wavL1, real_net_wavL2,
        ) = sess.run([val_model.loss,
+                     val_model.d_loss,
                      #  val_model.debug_mag,
                      #  val_model.real_net_mag_mse, val_model.real_net_spec_mse,
                      #  val_model.real_net_wav_L1, val_model.real_net_wav_L2,
@@ -93,7 +98,8 @@ def eval_one_epoch(sess, val_model):
       # print(np.mean(debug_mag), np.var(debug_mag), np.min(debug_mag), np.max(debug_mag), loss, flush=True)
       total_loss += loss
       i += 1
-      print("\rvalidate: %d/%d, cost %.2fs          " % (i, total_i, time.time()-ont_batch_time),
+      print("\rvalidate: %d/%d, cost %.2fs, loss %.2f, d_loss %.2f          " % (
+          i, total_i, time.time()-ont_batch_time, loss, d_loss),
             flush=True, end="")
       ont_batch_time = time.time()
     except tf.errors.OutOfRangeError:
@@ -145,7 +151,7 @@ def main():
   # region validation before training
   sess.run(val_inputs.initializer)
   evalOutputs_prev = eval_one_epoch(sess, val_model)
-  misc_utils.print_log("                                       \n\n",
+  misc_utils.print_log("                                                                         \n\n",
                        train_log_file, no_time=True)
   val_msg = "PRERUN.val> AVG.LOSS:%.4F, Cost itme:%.4Fs.\n" % (evalOutputs_prev.avg_loss,
                                                                evalOutputs_prev.cost_time)

@@ -95,7 +95,7 @@ class BaseConfig(StaticKey):
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
 
-  # use_adversarial_discriminator = False
+  use_adversarial_discriminator = False
 
 
 class p40(BaseConfig):
@@ -174,6 +174,14 @@ class nn_se_rSpecMSE(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
+
+class nn_se_rSpecMSE_D(p40): # running p40
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
 
 class nn_se_rSpecMSEBlstmOrth(BaseConfig): # running 15123
   """
@@ -837,6 +845,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_RRhybirdSpecMSE_001
+PARAM = nn_se_rSpecMSE_D
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

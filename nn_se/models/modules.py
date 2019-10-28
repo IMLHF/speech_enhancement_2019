@@ -28,10 +28,10 @@ class ComplexVariables(object):
     if PARAM.no_cnn:
       pass
     else:
-      conv2d_1 = ComplexValueConv2d(8, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
-      conv2d_2 = ComplexValueConv2d(16, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
-      conv2d_3 = ComplexValueConv2d(8, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
-      conv2d_4 = ComplexValueConv2d(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
+      conv2d_1 = ComplexValueConv2d(8, [5,5], padding="same", name='se_net/conv2_1') # -> [batch, time, fft_dot, 8]
+      conv2d_2 = ComplexValueConv2d(16, [5,5], dilation_rate=[2,2], padding="same", name='se_net/conv2_2') # -> [batch, t, f, 16]
+      conv2d_3 = ComplexValueConv2d(8, [5,5], dilation_rate=[4,4], padding="same", name='se_net/conv2_3') # -> [batch, t, f, 8]
+      conv2d_4 = ComplexValueConv2d(1, [5,5], padding="same", name='se_net/conv2_4') # -> [batch, t, f, 1]
       self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
 
     # CBLSTM
@@ -43,7 +43,7 @@ class ComplexVariables(object):
       forward_lstm = tf.keras.layers.RNN(complex_lstm_cell_f, return_sequences=True, name='fwlstm_%d' % i)
       backward_lstm = tf.keras.layers.RNN(complex_lstm_cell_b, return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
       blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
-                                            merge_mode='concat', name='blstm_%d' % i)
+                                            merge_mode='concat', name='se_net/blstm_%d' % i)
       self.blstm_layers.append(blstm)
 
     # CLSTM
@@ -51,11 +51,11 @@ class ComplexVariables(object):
     for i in range(1, PARAM.lstm_layers+1):
       complex_lstm_cell = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
                                                implementation=PARAM.clstmCell_implementation)
-      lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='lstm_%d' % i)
+      lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='se_net/lstm_%d' % i)
       self.lstm_layers.append(lstm)
 
     # CFC
-    self.out_fc = ComplexValueDense(PARAM.fft_dot, name='out_fc')
+    self.out_fc = ComplexValueDense(PARAM.fft_dot, name='se_net/out_fc')
 
 
 class RealVariables(object):
@@ -74,10 +74,10 @@ class RealVariables(object):
     if PARAM.no_cnn:
       pass
     else:
-      conv2d_1 = tf.keras.layers.Conv2D(16, [5,5], padding="same", name='conv2_1') # -> [batch, time, fft_dot, 8]
-      conv2d_2 = tf.keras.layers.Conv2D(32, [5,5], dilation_rate=[2,2], padding="same", name='conv2_2') # -> [batch, t, f, 16]
-      conv2d_3 = tf.keras.layers.Conv2D(16, [5,5], dilation_rate=[4,4], padding="same", name='conv2_3') # -> [batch, t, f, 8]
-      conv2d_4 = tf.keras.layers.Conv2D(1, [5,5], padding="same", name='conv2_4') # -> [batch, t, f, 1]
+      conv2d_1 = tf.keras.layers.Conv2D(16, [5,5], padding="same", name='se_net/conv2_1') # -> [batch, time, fft_dot, 8]
+      conv2d_2 = tf.keras.layers.Conv2D(32, [5,5], dilation_rate=[2,2], padding="same", name='se_net/conv2_2') # -> [batch, t, f, 16]
+      conv2d_3 = tf.keras.layers.Conv2D(16, [5,5], dilation_rate=[4,4], padding="same", name='se_net/conv2_3') # -> [batch, t, f, 8]
+      conv2d_4 = tf.keras.layers.Conv2D(1, [5,5], padding="same", name='se_net/conv2_4') # -> [batch, t, f, 1]
       self.conv2d_layers = [conv2d_1, conv2d_2, conv2d_3, conv2d_4]
 
     # BLSTM
@@ -89,7 +89,7 @@ class RealVariables(object):
       backward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=PARAM.rlstmCell_implementation,
                                            return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
       blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
-                                            merge_mode='concat', name='blstm_%d' % i)
+                                            merge_mode='concat', name='se_net/blstm_%d' % i)
       self.blstm_layers.append(blstm)
     # self.blstm_layers = []
     # if PARAM.blstm_layers > 0:
@@ -109,18 +109,18 @@ class RealVariables(object):
     for i in range(1, PARAM.lstm_layers+1):
       lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
                                   return_sequences=True, implementation=PARAM.rlstmCell_implementation,
-                                  name='lstm_%d' % i)
+                                  name='se_net/lstm_%d' % i)
       self.lstm_layers.append(lstm)
 
     # FC
-    self.out_fc = tf.keras.layers.Dense(PARAM.fft_dot, name='out_fc')
+    self.out_fc = tf.keras.layers.Dense(PARAM.fft_dot, name='se_net/out_fc')
 
-    # # discriminator
-    # if PARAM.use_adversarial_discriminator:
-    #   self.d_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
-    #                                      implementation=2, name='d_lstm')
-    #   self.d_denses = [tf.keras.layers.Dense(self.N_RNN_CELL*2, activation='relu', name='d_dense_1'),
-    #                    tf.keras.layers.Dense(2, name='d_dense_2')]
+    # discriminator
+    if PARAM.model_name == "DISCRIMINATOR_AD_MODEL":
+      self.d_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
+                                         implementation=2, name='discriminator/d_lstm')
+      self.d_denses = [tf.keras.layers.Dense(self.N_RNN_CELL*2, activation='relu', name='discriminator/d_dense_1'),
+                       tf.keras.layers.Dense(2, name='discriminator/d_dense_2')]
 
 
 class RCHybirdVariables(RealVariables):
@@ -134,11 +134,11 @@ class RCHybirdVariables(RealVariables):
     for i in range(1, PARAM.post_lstm_layers+1):
       complex_lstm_cell = ComplexValueLSTMCell(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
                                                implementation=PARAM.clstmCell_implementation)
-      lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='complex_lstm_%d' % i)
+      lstm = tf.keras.layers.RNN(complex_lstm_cell, return_sequences=True, name='se_net/complex_lstm_%d' % i)
       self.post_complex_layers.append(lstm)
 
     if len(self.post_complex_layers) > 0:
-      self.post_complex_layers.append(ComplexValueDense(PARAM.fft_dot, name='out_cfc'))
+      self.post_complex_layers.append(ComplexValueDense(PARAM.fft_dot, name='se_net/out_cfc'))
 
 
 class RRHybirdVariables(RealVariables):
@@ -152,11 +152,11 @@ class RRHybirdVariables(RealVariables):
     for i in range(1, PARAM.post_lstm_layers+1):
       lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
                                   implementation=PARAM.clstmCell_implementation,
-                                  return_sequences=True, name='real_post_lstm_%d' % i)
+                                  return_sequences=True, name='se_net/real_post_lstm_%d' % i)
       self.post_real_layers.append(lstm)
 
     if len(self.post_real_layers) > 0:
-      self.post_real_layers.append(tf.keras.layers.Dense(PARAM.fft_dot*2, name='out_fc'))
+      self.post_real_layers.append(tf.keras.layers.Dense(PARAM.fft_dot*2, name='se_net/out_fc'))
 
 class Module(object):
   """
@@ -215,22 +215,53 @@ class Module(object):
 
     self._loss = self.get_loss(forward_outputs)
 
+    self.d_loss = tf.reduce_sum(tf.zeros([1]))
+    if PARAM.use_adversarial_discriminator:
+      self.d_loss = self.get_discriminator_loss(forward_outputs)
+
     if mode == PARAM.MODEL_VALIDATE_KEY:
       return
 
     # optimizer
     # opt = tf.keras.optimizers.Adam(learning_rate=self._lr)
     opt = tf.compat.v1.train.AdamOptimizer(self._lr)
-    params = tf.compat.v1.trainable_variables()
+    no_d_params = tf.compat.v1.trainable_variables(scope='se_net*')
+    misc_utils.show_variables(no_d_params)
     gradients = tf.gradients(
       self._loss,
-      params,
+      no_d_params,
       colocate_gradients_with_ops=True
     )
     clipped_gradients, gradient_norm = tf.clip_by_global_norm(
         gradients, PARAM.max_gradient_norm)
-    self._train_op = opt.apply_gradients(zip(clipped_gradients, params),
+    self._train_op = opt.apply_gradients(zip(clipped_gradients, no_d_params),
                                          global_step=self.global_step)
+
+    if PARAM.use_adversarial_discriminator:
+      d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
+      self.save_variables.extend([var for var in d_params])
+      misc_utils.show_variables(d_params)
+      se_gradients = tf.gradients(
+          self.d_loss,
+          no_d_params,
+          colocate_gradients_with_ops=True
+      )
+      clipped_se_gradients, _ = tf.clip_by_global_norm(
+        se_gradients, PARAM.max_gradient_norm)
+      clipped_se_gradients = [grad1-grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # GRL
+      d_gradients = tf.gradients(
+          self.d_loss,
+          d_params,
+          colocate_gradients_with_ops=True
+      )
+      clipped_d_gradients, _ = tf.clip_by_global_norm(
+        d_gradients, PARAM.max_gradient_norm)
+      _train_op_se = opt.apply_gradients(zip(clipped_se_gradients, no_d_params),
+                                         global_step=self.global_step)
+      _train_op_d = opt.apply_gradients(zip(clipped_d_gradients, d_params),
+                                        global_step=self.global_step)
+      self._loss = self._loss + self.d_loss
+      self._train_op = tf.group(_train_op_se, _train_op_d)
 
 
   def CNN_RNN_FC(self, mixed_mag_batch, training=False):
@@ -371,20 +402,20 @@ class Module(object):
 
     return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch
 
-  # def clean_and_enhanced_mag_discriminator(self, clean_mag_batch, est_mag_batch):
-  #   training = (self.mode == PARAM.MODEL_TRAIN_KEY)
-  #   outputs = tf.concat([clean_mag_batch, est_mag_batch], axis=0)
-  #   zeros = tf.zeros(clean_mag_batch.shape[0], dtype=tf.int32)
-  #   ones = tf.ones(est_mag_batch.shape[0], dtype=tf.int32)
-  #   lables = tf.concat([zeros, ones], axis=0)
-  #   onehot_labels = tf.one_hot(lables, 2)
-  #   print(outputs.shape.as_list(), ' dddddddddddddddddddddd test shape')
+  def clean_and_enhanced_mag_discriminator(self, clean_mag_batch, est_mag_batch):
+    training = (self.mode == PARAM.MODEL_TRAIN_KEY)
+    outputs = tf.concat([clean_mag_batch, est_mag_batch], axis=0)
+    zeros = tf.zeros(clean_mag_batch.shape[0], dtype=tf.int32)
+    ones = tf.ones(est_mag_batch.shape[0], dtype=tf.int32)
+    labels = tf.concat([zeros, ones], axis=0)
+    onehot_labels = tf.one_hot(labels, 2)
+    # print(outputs.shape.as_list(), ' dddddddddddddddddddddd test shape')
 
-  #   outputs = self.variables.d_lstm(outputs)
-  #   for dense in self.variables.d_denses:
-  #     outputs = dense(outputs)
-
-
+    outputs = self.variables.d_lstm(outputs, training=training)
+    for dense in self.variables.d_denses:
+      outputs = dense(outputs)
+    logits = outputs
+    return logits, onehot_labels
 
   def CCNN_CRNN_CFC(self, mixed_spec_batch, training=False):
     mixed_spec_batch = tf.expand_dims(mixed_spec_batch, -1) # [batch, time, fft_dot, 1]
@@ -467,6 +498,18 @@ class Module(object):
     traceback.print_exc()
     raise NotImplementedError(
         "get_loss not implement, code: 67hjrethfd")
+
+
+  @abc.abstractmethod
+  def get_discriminator_loss(self, forward_outputs):
+    """
+    Returns:
+      loss
+    """
+    import traceback
+    traceback.print_exc()
+    raise NotImplementedError(
+        "get_discriminator_loss not implement, code: qyhhtwgrff")
 
 
   def change_lr(self, sess, new_lr):
