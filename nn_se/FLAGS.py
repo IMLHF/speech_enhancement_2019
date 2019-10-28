@@ -95,6 +95,8 @@ class BaseConfig(StaticKey):
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
 
+  # use_adversarial_discriminator = False
+
 
 class p40(BaseConfig):
   n_processor_gen_tfrecords = 56

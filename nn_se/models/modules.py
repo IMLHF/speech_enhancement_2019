@@ -115,6 +115,13 @@ class RealVariables(object):
     # FC
     self.out_fc = tf.keras.layers.Dense(PARAM.fft_dot, name='out_fc')
 
+    # # discriminator
+    # if PARAM.use_adversarial_discriminator:
+    #   self.d_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
+    #                                      implementation=2, name='d_lstm')
+    #   self.d_denses = [tf.keras.layers.Dense(self.N_RNN_CELL*2, activation='relu', name='d_dense_1'),
+    #                    tf.keras.layers.Dense(2, name='d_dense_2')]
+
 
 class RCHybirdVariables(RealVariables):
   """
@@ -363,6 +370,20 @@ class Module(object):
     est_clean_mag_batch = tf.math.abs(est_clean_spec_batch)
 
     return est_clean_mag_batch, est_clean_spec_batch, est_clean_wav_batch
+
+  # def clean_and_enhanced_mag_discriminator(self, clean_mag_batch, est_mag_batch):
+  #   training = (self.mode == PARAM.MODEL_TRAIN_KEY)
+  #   outputs = tf.concat([clean_mag_batch, est_mag_batch], axis=0)
+  #   zeros = tf.zeros(clean_mag_batch.shape[0], dtype=tf.int32)
+  #   ones = tf.ones(est_mag_batch.shape[0], dtype=tf.int32)
+  #   lables = tf.concat([zeros, ones], axis=0)
+  #   onehot_labels = tf.one_hot(lables, 2)
+  #   print(outputs.shape.as_list(), ' dddddddddddddddddddddd test shape')
+
+  #   outputs = self.variables.d_lstm(outputs)
+  #   for dense in self.variables.d_denses:
+  #     outputs = dense(outputs)
+
 
 
   def CCNN_CRNN_CFC(self, mixed_spec_batch, training=False):
