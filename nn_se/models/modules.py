@@ -181,6 +181,9 @@ class Module(object):
     # labels
     self.clean_wav_batch = clean_wav_batch
     self.clean_spec_batch = misc_utils.tf_batch_stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
+    # self.noise_wav_batch = mixed_wav_batch - clean_wav_batch
+    # self.noise_spec_batch = misc_utils.tf_batch_stft(self.noise_wav_batch, PARAM.frame_length, PARAM.frame_step)
+    # self.nosie_mag_batch = tf.math.abs(self.noise_spec_batch)
     if PARAM.use_wav_as_feature:
       self.clean_mag_batch = self.clean_spec_batch
     else:
