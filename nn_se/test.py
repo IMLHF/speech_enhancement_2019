@@ -28,7 +28,7 @@ def wav_through_stft_istft():
 
   mag = tf.math.abs(spec)
   phase = tf.math.angle(spec)
-  spec2 = tf.complex(mag, 0.0) * tf.exp(1j*tf.complex(phase, 0.0))
+  spec2 = tf.complex(mag, 0.0) * tf.exp(tf.complex(0.0, phase))
 
   wav2 = misc_utils.tf_batch_istft(spec2, PARAM.frame_length, step)
 
