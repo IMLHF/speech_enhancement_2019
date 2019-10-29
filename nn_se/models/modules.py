@@ -117,8 +117,12 @@ class RealVariables(object):
 
     # discriminator
     if PARAM.model_name == "DISCRIMINATOR_AD_MODEL":
-      self.d_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, recurrent_dropout=0.1,
-                                         implementation=2, name='discriminator/d_lstm')
+      forward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=2,
+                                          return_sequences=True, name='fwlstm_%d' % i)
+      backward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=2,
+                                           return_sequences=True, name='bwlstm_%d' % i, go_backwards=True)
+      self.d_blstm = tf.keras.layers.Bidirectional(layer=forward_lstm, backward_layer=backward_lstm,
+                                                   merge_mode='concat', name='discriminator/d_blstm')
       self.d_denses = [tf.keras.layers.Dense(self.N_RNN_CELL*2, activation='relu', name='discriminator/d_dense_1'),
                        tf.keras.layers.Dense(2, name='discriminator/d_dense_2')]
 
@@ -261,6 +265,7 @@ class Module(object):
       )
       clipped_d_gradients, _ = tf.clip_by_global_norm(
         d_gradients, PARAM.max_gradient_norm)
+      clipped_d_gradients = [grad*PARAM.discirminator_grad_coef for grad in clipped_d_gradients]
       _train_op_se = opt.apply_gradients(zip(clipped_se_gradients, no_d_params),
                                          global_step=self.global_step)
       _train_op_d = opt.apply_gradients(zip(clipped_d_gradients, d_params),
@@ -415,7 +420,8 @@ class Module(object):
     onehot_labels = tf.one_hot(labels, 2)
     # print(outputs.shape.as_list(), ' dddddddddddddddddddddd test shape')
 
-    outputs = self.variables.d_lstm(outputs, training=training)
+    outputs = self.variables.d_blstm(outputs, training=training) # [batch, time, fea]
+    outputs = tf.reduce_mean(outputs, 1)
     for dense in self.variables.d_denses:
       outputs = dense(outputs)
     logits = outputs
@@ -534,6 +540,10 @@ class Module(object):
   @property
   def loss(self):
     return self._loss
+
+  @property
+  def d_loss(self):
+    return self._d_loss
 
   @property
   def lr(self):
