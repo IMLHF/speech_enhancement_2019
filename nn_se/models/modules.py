@@ -213,11 +213,13 @@ class Module(object):
     else:
       self.clean_mag_batch = tf.math.abs(self.clean_spec_batch) # mag label
 
-    self._loss = self.get_loss(forward_outputs)
+    self._se_loss = self.get_loss(forward_outputs)
 
-    self.d_loss = tf.reduce_sum(tf.zeros([1]))
+    self._d_loss = tf.reduce_sum(tf.zeros([1]))
     if PARAM.use_adversarial_discriminator:
-      self.d_loss = self.get_discriminator_loss(forward_outputs)
+      self._d_loss = self.get_discriminator_loss(forward_outputs)
+
+    self._loss = self._se_loss + self._d_loss
 
     if mode == PARAM.MODEL_VALIDATE_KEY:
       return
@@ -228,7 +230,7 @@ class Module(object):
     no_d_params = tf.compat.v1.trainable_variables(scope='se_net*')
     misc_utils.show_variables(no_d_params)
     gradients = tf.gradients(
-      self._loss,
+      self._se_loss,
       no_d_params,
       colocate_gradients_with_ops=True
     )
@@ -242,15 +244,18 @@ class Module(object):
       self.save_variables.extend([var for var in d_params])
       misc_utils.show_variables(d_params)
       se_gradients = tf.gradients(
-          self.d_loss,
+          self._d_loss,
           no_d_params,
           colocate_gradients_with_ops=True
       )
       clipped_se_gradients, _ = tf.clip_by_global_norm(
         se_gradients, PARAM.max_gradient_norm)
-      clipped_se_gradients = [grad1-grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # GRL
+      if PARAM.D_GRL:
+        clipped_se_gradients = [grad1-grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # GRL
+      else:
+        clipped_se_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # GRL
       d_gradients = tf.gradients(
-          self.d_loss,
+          self._d_loss,
           d_params,
           colocate_gradients_with_ops=True
       )
@@ -260,7 +265,6 @@ class Module(object):
                                          global_step=self.global_step)
       _train_op_d = opt.apply_gradients(zip(clipped_d_gradients, d_params),
                                         global_step=self.global_step)
-      self._loss = self._loss + self.d_loss
       self._train_op = tf.group(_train_op_se, _train_op_d)
 
 
