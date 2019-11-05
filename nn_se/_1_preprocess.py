@@ -15,8 +15,8 @@ from .utils import misc_utils
 
 """
 Generate metadata and tfrecords.
-[($root_dir/datasets) fold structure]
-$root_dir/datasets:
+[($root_dir/$datasets_name) fold structure]
+$root_dir/$datasets_name:
   train:
     speech:
     noise:
@@ -41,9 +41,9 @@ train_name = PARAM.train_name
 validation_name = PARAM.validation_name
 test_name = PARAM.test_name
 
-def prepare_train_validation_test_set(dataset_name): # for train/val/test
+def prepare_train_validation_test_set(sub_dataset_name): # for train/val/test
     # get speech_list and noise_list
-    set_root = Path(PARAM.root_dir).joinpath("datasets", dataset_name) # "/xx/datasets/train"
+    set_root = misc_utils.datasets_dir().joinpath(sub_dataset_name) # "/xx/$datasets_name/train"
     speech_list = list(set_root.joinpath("speech").glob("*/*.wav"))
     noise_list = list(set_root.joinpath("noise").glob("*.wav"))
 
@@ -62,16 +62,16 @@ def prepare_train_validation_test_set(dataset_name): # for train/val/test
         train_name:PARAM.n_train_set_records,
         validation_name:PARAM.n_val_set_records,
         test_name:PARAM.n_test_set_records
-    }[dataset_name]
+    }[sub_dataset_name]
     speech_idxs = np.random.randint(len(speech_list), size=n_records)
     noise_idxs = np.random.randint(len(noise_list), size=n_records)
 
-    meta_dataf=set_root.joinpath(dataset_name+".meta").open("w")
+    meta_dataf=set_root.joinpath(sub_dataset_name+".meta").open("w")
     for speech_idx, noise_idx in zip(speech_idxs, noise_idxs):
       speech_path = speech_list[speech_idx]
       noise_path = noise_list[noise_idx]
       record_line = str(speech_path)+"|"+str(noise_path)
-      if dataset_name in [train_name, validation_name]:
+      if sub_dataset_name in [train_name, validation_name]:
         assert PARAM.train_val_snr[0]<=PARAM.train_val_snr[1], "train_val_snr error."
         snr = np.random.randint(PARAM.train_val_snr[0], PARAM.train_val_snr[1]+1)
         record_line += "|"+str(snr)
@@ -107,12 +107,12 @@ def _gen_tfrecords_minprocessor(params, meta_list, tfrecords_dir:Path):
     writer.flush()
 
 
-def generate_tfrecords_using_meta(dataset_name):
-  set_root = misc_utils.datasets_dir().joinpath(dataset_name) # "/xx/datasets/train"
-  metaf = set_root.joinpath(dataset_name+".meta").open("r")
+def generate_tfrecords_using_meta(sub_dataset_name):
+  set_root = misc_utils.datasets_dir().joinpath(sub_dataset_name) # "/xx/$datasets_name/train"
+  metaf = set_root.joinpath(sub_dataset_name+".meta").open("r")
   meta_list = list(metaf.readlines())
   meta_list = [meta.strip() for meta in meta_list]
-  print(dataset_name+" contain %d records." % len(meta_list), flush=True)
+  print(sub_dataset_name+" contain %d records." % len(meta_list), flush=True)
   metaf.close()
   tfrecords_dir = set_root.joinpath("tfrecords")
   if tfrecords_dir.exists():
@@ -132,9 +132,9 @@ def generate_tfrecords_using_meta(dataset_name):
 
   func = partial(_gen_tfrecords_minprocessor, meta_list=meta_list, tfrecords_dir=tfrecords_dir)
   job = multiprocessing.Pool(PARAM.n_processor_gen_tfrecords).imap(func, param_list)
-  list(tqdm(job, dataset_name, len(param_list), unit="tfrecords", ncols=60))
+  list(tqdm(job, sub_dataset_name, len(param_list), unit="tfrecords", ncols=60))
 
-  print("Generate %s set tfrecords over, cost time %06ds\n\n" % (dataset_name, time.time()-gen_s_time), flush=True)
+  print("Generate %s set tfrecords over, cost time %06ds\n\n" % (sub_dataset_name, time.time()-gen_s_time), flush=True)
 
 
 def main():

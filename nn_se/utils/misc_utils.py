@@ -75,7 +75,7 @@ def exp_configName_dir():
 
 
 def datasets_dir():
-  return Path(PARAM.root_dir).joinpath("datasets")
+  return Path(PARAM.root_dir).joinpath(PARAM.datasets_name)
 
 
 def noam_scheme(init_lr, global_step, warmup_steps=4000.):

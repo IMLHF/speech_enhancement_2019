@@ -144,7 +144,7 @@ def eval_testSet_by_meta(mix_SNR, save_test_records=False):
   save_test_records: if save test answer (clean, mixed, enhanced)
   """
 
-  set_root = misc_utils.datasets_dir().joinpath(PARAM.test_name) # "/xx/datasets/train"
+  set_root = misc_utils.datasets_dir().joinpath(PARAM.test_name) # "/xx/$datasets_name/train"
   meta_dir = set_root.joinpath(PARAM.test_name+".meta")
   test_log_file = str(misc_utils.test_log_file_dir(mix_SNR))
   misc_utils.print_log("Using meta '%s'\n" % str(meta_dir), test_log_file)

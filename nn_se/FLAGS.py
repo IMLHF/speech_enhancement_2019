@@ -14,9 +14,10 @@ class StaticKey(object):
 class BaseConfig(StaticKey):
   VISIBLE_GPU = "0"
   root_dir = '/home/lhf/worklhf/speech_enhancement_2019_exp/'
+  datasets_name = 'vctk_musan_datasets'
   '''
   # dir to store log, model and results files:
-  $root_dir/datasets: datasets dir
+  $root_dir/$datasets_name: datasets dir
   $root_dir/exp/$config_name/log: logs(include tensorboard log)
   $root_dir/exp/$config_name/ckpt: ckpt
   $root_dir/exp/$config_name/test_records: test results
@@ -98,6 +99,10 @@ class BaseConfig(StaticKey):
   use_adversarial_discriminator = False
   D_GRL = False
   discirminator_grad_coef = 1.0
+  se_grad_fromD_coef = 1.0
+  D_loss_coef = 1.0
+
+  cnn_shortcut = None # None | "add" | "multiply"
 
 
 class p40(BaseConfig):
@@ -162,7 +167,6 @@ class nn_se_cnn1blstm1lstm(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
 
-
 class nn_se_cMagMSE(p40): # pendding p40
   blstm_layers = 1
   lstm_layers = 1
@@ -177,17 +181,25 @@ class nn_se_rSpecMSE(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rSpecMSE_D_GCoef10(p40): # running p40
-  model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
-  D_GRL = True
+class nn_se_rSpecMSE_mulCnn(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
-  GPU_PARTION = 0.3
-  discirminator_grad_coef = 1.0
+  cnn_shortcut = "multiply"
 
-class nn_se_rSpecMSE_D_GCoef15(p40): # running p40
+class nn_se_rSpecMSE_addCnn(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  cnn_shortcut = "add"
+
+class nn_se_rSpecMSE_D_GRL_001(p40): # running p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
   use_adversarial_discriminator = True
   D_GRL = True
@@ -195,9 +207,45 @@ class nn_se_rSpecMSE_D_GCoef15(p40): # running p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
   GPU_PARTION = 0.3
+  se_grad_fromD_coef = 0.5
   discirminator_grad_coef = 1.5
 
-class nn_se_rSpecMSE_D_noGRL(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_002(p40): # running p40
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.5
+
+class nn_se_rSpecMSE_D_GRL_003(p40): # running p40
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 3.0
+
+class nn_se_rSpecMSE_D_GRL_004(p40): # running p40
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  # loss_weight = [0.5]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+  # D_loss_coef = 10.0
+
+class nn_se_rSpecMSE_D_noGRL(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
   use_adversarial_discriminator = True
   D_GRL = False
@@ -206,7 +254,7 @@ class nn_se_rSpecMSE_D_noGRL(p40): # running p40
   loss_name = ["real_net_spec_mse"]
   GPU_PARTION = 0.3
 
-class nn_se_rSpecMSEBlstmOrth(p40): # running p40
+class nn_se_rSpecMSEBlstmOrth(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -272,7 +320,7 @@ class nn_se_hybirdSpecMSE_004(p40): # stop p40
   post_complex_net_output = 'cresidual'
   GPU_PARTION = 0.32 #
 
-class nn_se_hybirdSpecMSE_005(p40): # running p40
+class nn_se_hybirdSpecMSE_005(p40): # done p40
   """
   cnn1blstm1lstm+2clstm1cdnn
   """
@@ -301,14 +349,14 @@ class nn_se_hybirdSpecMSEclipMag_001(p40): # done p40
 
 class nn_se_hybirdSpecMSEclipMag_002(p40): # running p40
   """
-  cnn1blstm1lstm+2clstm1cdnn
+  cnn1blstm1lstm+2bclstm1cdnn
   clip post complex lstm inputs mag
   """
   model_name = "RC_HYBIRD_MODEL"
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
-  loss_weight = [1.0, 3.0]
+  loss_weight = [1.0, 1.0]
   post_complex_net_output = 'cresidual'
   GPU_PARTION = 0.32 #
   complex_clip_mag = True
@@ -335,12 +383,12 @@ class nn_se_hybirdSpecMSEclipMag_003(p40): # running p40
   clstmCell_implementation = 2
 
 class nn_se_RRhybirdSpecMSE_001(p40): # running p40
-  # cnn1blstm1lstm+2lstm1dnn
+  # cnn1blstm1lstm+2blstm1dnn
   model_name = "RR_HYBIRD_MODEL"
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse", 'comp_net_spec_mse']
-  loss_weight = [1.0, 3.0]
+  loss_weight = [1.0, 1.0]
   post_complex_net_output = 'cresidual'
   GPU_PARTION = 0.30 #
   complex_clip_mag = True
@@ -515,7 +563,7 @@ class nn_se_rReMagMSE1000(p40): # done p40
   loss_name = ["real_net_reMagMse"]
   relative_loss_AFD = 1000.0
 
-class nn_se_rReSpecMSE20(p40): # running p40
+class nn_se_rReSpecMSE20(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -585,7 +633,7 @@ class nn_se_rWavL2(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_wav_L2"]
 
-class nn_se_rReWavL2_AFD20(p40): # running p40
+class nn_se_rReWavL2_AFD20(p40): # done p40
   """
   cnn1blstm1lstm
   relative wav mse, AFD 20
@@ -789,8 +837,26 @@ class nn_se_rMagSpecMseSDRv3_001(p40): # running p40
   """
   blstm_layers = 1
   lstm_layers = 1
-  loss_name = ["real_net_spec_mse", "real_net_spec_mse", "real_net_sdrV3"]
+  loss_name = ["real_net_mag_mse", "real_net_spec_mse", "real_net_sdrV3"]
   loss_weight = [1.0, 1.0, 1.0]
+
+class nn_se_rMagMseSDRv3_001(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_mag_mse", "real_net_sdrV3"]
+  loss_weight = [1.0, 1.0]
+
+class nn_se_rMagSpecMse_001(p40): # running p40
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_mag_mse", "real_net_spec_mse"]
+  loss_weight = [1.0, 1.0]
 
 class nn_se_rWavL2SDRv3_1_1(p40): # done p40
   """
@@ -877,6 +943,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rMagSpecMseSDRv3_001
+PARAM = nn_se_rSpecMSE_D_GRL_004
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

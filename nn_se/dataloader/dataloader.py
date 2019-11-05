@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 from ..FLAGS import PARAM
+from ..utils import misc_utils
 
 
 class DataSetsOutputs(
@@ -22,11 +23,11 @@ def parse_func(record_proto):
   return record['clean'], record['mixed']
 
 
-def get_batch_inputs_from_dataset(datset_name):
+def get_batch_inputs_from_dataset(sub_dataset_name):
   """
   dataset_name: PARAM.train_name, PARAM.val_name, PARAM.test_name
   """
-  tfrecords_list = Path(PARAM.root_dir).joinpath('datasets', datset_name, "tfrecords", "*.tfrecords")
+  tfrecords_list = misc_utils.datasets_dir().joinpath(sub_dataset_name, "tfrecords", "*.tfrecords")
   files = tf.data.Dataset.list_files(str(tfrecords_list))
   # files = files.take(FLAGS.PARAM.MAX_TFRECORD_FILES_USED)
   if PARAM.shuffle_records:
