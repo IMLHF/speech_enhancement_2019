@@ -271,17 +271,20 @@ class Module(object):
       clipped_se_gradients = [grad*PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE for grad in clipped_se_gradients]
       if PARAM.D_GRL:
         clipped_se_gradients = [-grad for grad in clipped_se_gradients] # GRL
-      for grad in clipped_se_gradients:
-        print(grad.shape.as_list())
+      for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+        print(grad1.shape.as_list(), grad2.shape.as_list())
+        print('233', tf.reduce_sum(grad1*grad2,-1).shape.as_list(), tf.reduce_sum(grad1*grad1,-1).shape.as_list())
       if PARAM.D_Grad_DCC: # Direction Consistent Constraints
-        constrainted_se_grads_fromD = []
-        for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-          w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
-          constrainted_grad2 = w_of_grad2 * grad2
-          constrainted_se_grads_fromD.append(constrainted_grad2)
-        clipped_se_gradients = constrainted_se_grads_fromD
-        # clipped_se_gradients = [
-        #     tf.reduce_sum(grad1*grad2)/tf.reduce_sum(grad1*grad1)*grad1 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)]
+        ## D_GRL_005
+        clipped_se_gradients = [
+            tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.sqrt(tf.reduce_sum(grad1*grad1, -1))), -1)*grad1 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)]
+        ## D_GRL_006
+        # constrainted_se_grads_fromD = []
+        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+        #   w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
+        #   constrainted_grad2 = w_of_grad2 * grad2
+        #   constrainted_se_grads_fromD.append(constrainted_grad2)
+        # clipped_se_gradients = constrainted_se_grads_fromD
       clipped_se_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # merge se_grad from se_loss and D_loss
       d_gradients = tf.gradients(
           self._d_loss,
