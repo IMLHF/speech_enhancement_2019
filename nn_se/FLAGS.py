@@ -14,7 +14,8 @@ class StaticKey(object):
 class BaseConfig(StaticKey):
   VISIBLE_GPU = "0"
   root_dir = '/home/lhf/worklhf/speech_enhancement_2019_exp/'
-  datasets_name = 'vctk_musan_datasets'
+  # datasets_name = 'vctk_musan_datasets'
+  datasets_name = 'datasets'
   '''
   # dir to store log, model and results files:
   $root_dir/$datasets_name: datasets dir
@@ -99,6 +100,7 @@ class BaseConfig(StaticKey):
   use_adversarial_discriminator = False
   D_GRL = False
   discirminator_grad_coef = 1.0
+  D_Grad_DCC = False
   se_grad_fromD_coef = 1.0
   D_loss_coef = 1.0
 
@@ -243,7 +245,52 @@ class nn_se_rSpecMSE_D_GRL_004(p40): # running p40
   GPU_PARTION = 0.3
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.0
-  # D_loss_coef = 10.0
+
+class nn_se_rSpecMSE_D_GRL_005(p40): # running p40
+  '''
+  vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+
+class nn_se_rSpecMSE_D_GRL_006(p40): # done p40
+  '''
+  sign constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+
+class nn_se_rSpecMSE_D_GRL_007(p40): # running p40
+  '''
+  full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+
 
 class nn_se_rSpecMSE_D_noGRL(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
@@ -943,6 +990,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rSpecMSE_D_GRL_004
+PARAM = nn_se_rSpecMSE_D_GRL_007
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

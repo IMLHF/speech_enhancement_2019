@@ -276,8 +276,9 @@ class Module(object):
         print('233', tf.reduce_sum(grad1*grad2,-1).shape.as_list(), tf.reduce_sum(grad1*grad1,-1).shape.as_list())
       if PARAM.D_Grad_DCC: # Direction Consistent Constraints
         ## D_GRL_005
-        clipped_se_gradients = [
-            tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.sqrt(tf.reduce_sum(grad1*grad1, -1))), -1)*grad1 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)]
+        # clipped_se_gradients = [
+        #     tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.reduce_sum(grad1*grad1, -1)), -1)*grad1 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)]
+
         ## D_GRL_006
         # constrainted_se_grads_fromD = []
         # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
@@ -285,6 +286,17 @@ class Module(object):
         #   constrainted_grad2 = w_of_grad2 * grad2
         #   constrainted_se_grads_fromD.append(constrainted_grad2)
         # clipped_se_gradients = constrainted_se_grads_fromD
+
+        ## D_GRL_007
+        constrainted_se_grads_fromD = []
+        for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+          grad_shape = grad1.shape.as_list()
+          vec1 = tf.reshape(grad1,[-1])
+          vec2 = tf.reshape(grad2,[-1])
+          prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+          constrainted_grad2 = tf.reshape(prj_on_vec1, grad_shape)
+          constrainted_se_grads_fromD.append(constrainted_grad2)
+        clipped_se_gradients = constrainted_se_grads_fromD
       clipped_se_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # merge se_grad from se_loss and D_loss
       d_gradients = tf.gradients(
           self._d_loss,
