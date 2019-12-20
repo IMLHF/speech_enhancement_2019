@@ -280,23 +280,45 @@ class Module(object):
         #     tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.reduce_sum(grad1*grad1, -1)), -1)*grad1 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)]
 
         ## D_GRL_006
+        constrainted_se_grads_fromD = []
+        for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+          w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
+          constrainted_grad2 = w_of_grad2 * grad2
+          constrainted_se_grads_fromD.append(constrainted_grad2)
+        clipped_se_gradients = constrainted_se_grads_fromD
+
+        ## D_GRL_007
         # constrainted_se_grads_fromD = []
         # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-        #   w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
-        #   constrainted_grad2 = w_of_grad2 * grad2
+        #   grad_shape = grad1.shape.as_list()
+        #   vec1 = tf.reshape(grad1,[-1])
+        #   vec2 = tf.reshape(grad2,[-1])
+        #   prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+        #   constrainted_grad2 = tf.reshape(prj_on_vec1, grad_shape)
         #   constrainted_se_grads_fromD.append(constrainted_grad2)
         # clipped_se_gradients = constrainted_se_grads_fromD
 
-        ## D_GRL_007
-        constrainted_se_grads_fromD = []
-        for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-          grad_shape = grad1.shape.as_list()
-          vec1 = tf.reshape(grad1,[-1])
-          vec2 = tf.reshape(grad2,[-1])
-          prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
-          constrainted_grad2 = tf.reshape(prj_on_vec1, grad_shape)
-          constrainted_se_grads_fromD.append(constrainted_grad2)
-        clipped_se_gradients = constrainted_se_grads_fromD
+        ## D_GRL_008
+        # shape_list = []
+        # split_sizes = []
+        # vec1 = tf.constant([])
+        # vec2 = tf.constant([])
+        # constrainted_se_grads_fromD = []
+        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+        #   grad_shape = grad1.shape.as_list()
+        #   shape_list.append(grad_shape)
+        #   vec1_t = tf.reshape(grad1,[-1])
+        #   vec2_t = tf.reshape(grad2,[-1])
+        #   vec_len = vec1_t.shape.as_list()[0]
+        #   split_sizes.append(vec_len)
+        #   vec1 = tf.concat([vec1, vec1_t], 0)
+        #   vec2 = tf.concat([vec2, vec2_t], 0)
+        # prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+        # # print(len(shape_list), flush=True)
+        # constrainted_se_grads_fromD = tf.split(prj_on_vec1, split_sizes)
+        # constrainted_se_grads_fromD = [
+        #     tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
+
       clipped_se_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # merge se_grad from se_loss and D_loss
       d_gradients = tf.gradients(
           self._d_loss,
