@@ -280,12 +280,12 @@ class Module(object):
         #     tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.reduce_sum(grad1*grad1, -1)), -1)*grad1 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)]
 
         ## D_GRL_006
-        constrainted_se_grads_fromD = []
-        for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-          w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
-          constrainted_grad2 = w_of_grad2 * grad2
-          constrainted_se_grads_fromD.append(constrainted_grad2)
-        clipped_se_gradients = constrainted_se_grads_fromD
+        # constrainted_se_grads_fromD = []
+        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+        #   w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
+        #   constrainted_grad2 = w_of_grad2 * grad2
+        #   constrainted_se_grads_fromD.append(constrainted_grad2)
+        # clipped_se_gradients = constrainted_se_grads_fromD
 
         ## D_GRL_007
         # constrainted_se_grads_fromD = []
@@ -299,25 +299,25 @@ class Module(object):
         # clipped_se_gradients = constrainted_se_grads_fromD
 
         ## D_GRL_008
-        # shape_list = []
-        # split_sizes = []
-        # vec1 = tf.constant([])
-        # vec2 = tf.constant([])
-        # constrainted_se_grads_fromD = []
-        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-        #   grad_shape = grad1.shape.as_list()
-        #   shape_list.append(grad_shape)
-        #   vec1_t = tf.reshape(grad1,[-1])
-        #   vec2_t = tf.reshape(grad2,[-1])
-        #   vec_len = vec1_t.shape.as_list()[0]
-        #   split_sizes.append(vec_len)
-        #   vec1 = tf.concat([vec1, vec1_t], 0)
-        #   vec2 = tf.concat([vec2, vec2_t], 0)
-        # prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
-        # # print(len(shape_list), flush=True)
-        # constrainted_se_grads_fromD = tf.split(prj_on_vec1, split_sizes)
-        # constrainted_se_grads_fromD = [
-        #     tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
+        shape_list = []
+        split_sizes = []
+        vec1 = tf.constant([])
+        vec2 = tf.constant([])
+        constrainted_se_grads_fromD = []
+        for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+          grad_shape = grad1.shape.as_list()
+          shape_list.append(grad_shape)
+          vec1_t = tf.reshape(grad1,[-1])
+          vec2_t = tf.reshape(grad2,[-1])
+          vec_len = vec1_t.shape.as_list()[0]
+          split_sizes.append(vec_len)
+          vec1 = tf.concat([vec1, vec1_t], 0)
+          vec2 = tf.concat([vec2, vec2_t], 0)
+        prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+        # print(len(shape_list), flush=True)
+        constrainted_se_grads_fromD = tf.split(prj_on_vec1, split_sizes)
+        constrainted_se_grads_fromD = [
+            tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
 
       clipped_se_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # merge se_grad from se_loss and D_loss
       d_gradients = tf.gradients(
@@ -328,11 +328,17 @@ class Module(object):
       clipped_d_gradients, _ = tf.clip_by_global_norm(
         d_gradients, PARAM.max_gradient_norm)
       clipped_d_gradients = [grad*PARAM.discirminator_grad_coef for grad in clipped_d_gradients]
-      _train_op_se = opt.apply_gradients(zip(clipped_se_gradients, no_d_params),
-                                         global_step=self.global_step)
-      _train_op_d = opt.apply_gradients(zip(clipped_d_gradients, d_params),
-                                        global_step=self.global_step)
-      self._train_op = tf.group(_train_op_se, _train_op_d)
+
+      ## D_GRL_xxxT1
+      all_clipped_grad = clipped_se_gradients + clipped_d_gradients
+      all_params = no_d_params + d_params
+      self._train_op = opt.apply_gradients(zip(all_clipped_grad, all_params),
+                                           global_step=self.global_step)
+      # _train_op_se = opt.apply_gradients(zip(clipped_se_gradients, no_d_params),
+      #                                    global_step=self.global_step)
+      # _train_op_d = opt.apply_gradients(zip(clipped_d_gradients, d_params),
+      #                                   global_step=self.global_step)
+      # self._train_op = tf.group(_train_op_se, _train_op_d)
 
 
   def CNN_RNN_FC(self, mixed_mag_batch, training=False):
