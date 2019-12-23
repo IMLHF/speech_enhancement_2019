@@ -27,7 +27,8 @@ class TrainOutputs(
   pass
 
 
-def train_one_epoch(sess, train_model, train_log_file):
+def train_one_epoch(sess, train_model, train_log_file,
+                    stop_criterion_losses, show_losses):
   tr_loss, i, lr = 0.0, 0, -1
   s_time = time.time()
   minbatch_time = time.time()
@@ -56,8 +57,8 @@ def train_one_epoch(sess, train_model, train_log_file):
     'deep_features_loss': train_model._deep_features_loss,
     'deep_features_losses': train_model._deep_features_losses,
   }
-  show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
-  stop_criterion_losses = PARAM.stop_criterion_losses if PARAM.stop_criterion_losses is not None else PARAM.loss_name
+  # show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
+  # stop_criterion_losses = PARAM.stop_criterion_losses if PARAM.stop_criterion_losses is not None else PARAM.loss_name
   losses_to_run = [train_model.train_op, train_model.lr, train_model.global_step]
   for l_name in show_losses:
     losses_to_run.append(all_losses[l_name])
@@ -70,7 +71,7 @@ def train_one_epoch(sess, train_model, train_log_file):
     try:
       run_out_losses = sess.run(losses_to_run)
       _, lr, global_step = run_out_losses[:3]
-      runOut_show_losses = run_out_losses[3:len(PARAM.show_losses)+3]
+      runOut_show_losses = run_out_losses[3:len(show_losses)+3]
       runOut_show_losses = round_lists(runOut_show_losses, 4)
       runOut_show_losses_vec = np.array(unfold_list(runOut_show_losses))
       if total_show_losses_vec is None:
@@ -78,7 +79,7 @@ def train_one_epoch(sess, train_model, train_log_file):
       else:
         total_show_losses_vec += runOut_show_losses_vec
 
-      runOut_losses_stopCriterion = run_out_losses[-len(PARAM.stop_criterion_losses):]
+      runOut_losses_stopCriterion = run_out_losses[-len(stop_criterion_losses):]
       sum_loss_stopCriterion = np.sum(runOut_losses_stopCriterion)
 
       tr_loss += sum_loss_stopCriterion
@@ -123,7 +124,7 @@ def unfold_list(lst):
   [ans_lst.append(n) if type(n) is not list else ans_lst.extend(unfold_list(n)) for n in lst]
   return ans_lst
 
-def eval_one_epoch(sess, val_model):
+def eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses):
   val_s_time = time.time()
   total_loss = 0.0
   ont_batch_time = time.time()
@@ -152,8 +153,8 @@ def eval_one_epoch(sess, val_model):
     'deep_features_loss': val_model._deep_features_loss,
     'deep_features_losses': val_model._deep_features_losses,
   }
-  show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
-  stop_criterion_losses = PARAM.stop_criterion_losses if PARAM.stop_criterion_losses is not None else PARAM.loss_name
+  # show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
+  # stop_criterion_losses = PARAM.stop_criterion_losses if PARAM.stop_criterion_losses is not None else PARAM.loss_name
   losses_to_run = []
   for l_name in show_losses:
     losses_to_run.append(all_losses[l_name])
@@ -164,7 +165,7 @@ def eval_one_epoch(sess, val_model):
   while True:
     try:
       run_out_losses = sess.run(losses_to_run)
-      runOut_show_losses = run_out_losses[:len(PARAM.show_losses)]
+      runOut_show_losses = run_out_losses[:len(show_losses)]
       runOut_show_losses = round_lists(runOut_show_losses, 4)
       runOut_show_losses_vec = np.array(unfold_list(runOut_show_losses))
       if total_show_losses_vec is None:
@@ -172,7 +173,7 @@ def eval_one_epoch(sess, val_model):
       else:
         total_show_losses_vec += runOut_show_losses_vec
 
-      runOut_losses_stopCriterion = run_out_losses[-len(PARAM.stop_criterion_losses):]
+      runOut_losses_stopCriterion = run_out_losses[-len(stop_criterion_losses):]
       sum_loss_stopCriterion = np.sum(runOut_losses_stopCriterion)
       # print("\n", loss, real_net_mag_mse, real_net_spec_mse, real_net_wavL1, real_net_wavL2, flush=True)
       # print(np.mean(debug_mag), np.var(debug_mag), np.min(debug_mag), np.max(debug_mag), loss, flush=True)
@@ -242,7 +243,7 @@ def main():
   show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
   misc_utils.print_log("stop criterion losses: "+str(stop_criterion_losses)+"\n", train_log_file)
   misc_utils.print_log("show losses: "+str(show_losses)+"\n", train_log_file)
-  evalOutputs_prev = eval_one_epoch(sess, val_model)
+  evalOutputs_prev = eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses)
   misc_utils.print_log("                                            "
                        "                                            "
                        "                                         \n\n",
@@ -259,13 +260,13 @@ def main():
   deep_feature_loss_start = False
   for epoch in range(PARAM.s_epoch, PARAM.max_epoch+1):
     misc_utils.print_log("\n\n", train_log_file, no_time=True)
-    misc_utils.print_log("stop criterion losses: "+str(stop_criterion_losses)+"\n", train_log_file)
-    misc_utils.print_log("show losses: "+str(show_losses)+"\n", train_log_file)
     misc_utils.print_log("  Epoch %03d:\n" % epoch, train_log_file)
+    misc_utils.print_log("   stop criterion losses: "+str(stop_criterion_losses)+"\n", train_log_file)
+    misc_utils.print_log("   show losses: "+str(show_losses)+"\n", train_log_file)
 
     # train
     sess.run(train_inputs.initializer)
-    trainOutputs = train_one_epoch(sess, train_model, train_log_file)
+    trainOutputs = train_one_epoch(sess, train_model, train_log_file, stop_criterion_losses, show_losses)
     misc_utils.print_log("     Train     > loss:%.4f, losses:%s, Cost time:%ds.\n" % (
         trainOutputs.avg_loss,
         trainOutputs.avg_show_losses,
@@ -274,7 +275,7 @@ def main():
 
     # validation
     sess.run(val_inputs.initializer)
-    evalOutputs = eval_one_epoch(sess, val_model)
+    evalOutputs = eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses)
     val_loss_rel_impr = __relative_impr(evalOutputs_prev.avg_loss, evalOutputs.avg_loss, True)
     misc_utils.print_log("     Validation> loss:%.4f, losses:%s, Cost time:%ds.\n" % (
         evalOutputs.avg_loss,
@@ -317,6 +318,7 @@ def main():
         deep_feature_loss_start = True
         train_model = train_model_df
         evalOutputs_prev.avg_loss = 9999.0
+        stop_criterion_losses = ["real_net_spec_mse", "deep_features_loss"]
       else:
         break
 
