@@ -11,13 +11,15 @@ class DISCRIMINATOR_AD_MODEL(Module):
                variables: RealVariables,
                mixed_wav_batch,
                clean_wav_batch=None,
-               noise_wav_batch=None):
+               noise_wav_batch=None,
+               use_deep_feature_loss=False):
     super(DISCRIMINATOR_AD_MODEL, self).__init__(
         mode,
         variables,
         mixed_wav_batch,
         clean_wav_batch,
-        noise_wav_batch)
+        noise_wav_batch,
+        use_deep_feature_loss=use_deep_feature_loss)
 
   def forward(self, mixed_wav_batch):
     r_outputs = self.real_networks_forward(mixed_wav_batch)
@@ -25,12 +27,25 @@ class DISCRIMINATOR_AD_MODEL(Module):
 
     return r_est_clean_mag_batch, r_est_clean_spec_batch, r_est_clean_wav_batch
 
+  def get_deep_features_losses(self, deep_features):
+    '''
+    deep_features: list,
+    '''
+    losses = []
+    for deep_f in deep_features:
+      labels, ests = tf.split(deep_f, 2, axis=0) # [batch,time,f]
+      loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0))
+      losses.append(loss)
+    return losses
+
+
   def get_discriminator_loss(self, forward_outputs):
     r_est_clean_mag_batch, r_est_clean_spec_batch, r_est_clean_wav_batch = forward_outputs
-    logits, one_hots_labels = self.clean_and_enhanced_mag_discriminator(self.clean_mag_batch, r_est_clean_mag_batch)
+    logits, one_hots_labels, deep_features = self.clean_and_enhanced_mag_discriminator(self.clean_mag_batch, r_est_clean_mag_batch)
     loss = tf.losses.softmax_cross_entropy(one_hots_labels, logits)
     loss = loss*PARAM.D_loss_coef
-    return loss
+    deep_features_losses = self.get_deep_features_losses(deep_features)
+    return loss, deep_features_losses
 
   def get_loss(self, forward_outputs):
     r_est_clean_mag_batch, r_est_clean_spec_batch, r_est_clean_wav_batch = forward_outputs

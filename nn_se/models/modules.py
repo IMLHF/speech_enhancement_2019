@@ -186,7 +186,8 @@ class Module(object):
                variables: Union[RealVariables, ComplexVariables],
                mixed_wav_batch,
                clean_wav_batch=None,
-               noise_wav_batch=None):
+               noise_wav_batch=None,
+               use_deep_feature_loss=False):
     del noise_wav_batch
     self.mixed_wav_batch = mixed_wav_batch
 
@@ -233,7 +234,10 @@ class Module(object):
 
     self._d_loss = tf.reduce_sum(tf.zeros([1]))
     if PARAM.use_adversarial_discriminator:
-      self._d_loss = self.get_discriminator_loss(forward_outputs)
+      self._d_loss, self._deep_features_losses = self.get_discriminator_loss(forward_outputs)
+      self._deep_features_loss = 0.0
+      for l in self._deep_features_losses:
+        self._deep_features_loss += l
 
     self._loss = self._se_loss + self._d_loss
 
@@ -255,7 +259,20 @@ class Module(object):
     self._train_op = opt.apply_gradients(zip(clipped_gradients, no_d_params),
                                          global_step=self.global_step)
 
-    if PARAM.use_adversarial_discriminator:
+
+    ## deep features loss grads
+    if use_deep_feature_loss:
+      deep_f_loss_grad = tf.gradients(
+        self._deep_features_loss,
+        no_d_params,
+        colocate_gradients_with_ops=True
+      )
+      deep_f_loss_grad, deep_f_gra_norm = tf.clip_by_global_norm(
+          deep_f_loss_grad, PARAM.max_gradient_norm)
+      clipped_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, deep_f_loss_grad)]
+      self._train_op = opt.apply_gradients(zip(clipped_gradients, no_d_params),
+                                           global_step=self.global_step)
+    elif PARAM.use_adversarial_discriminator: # if use D as deep_feature_loss then stop train D
       d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
       self.save_variables.extend([var for var in d_params])
       # misc_utils.show_variables(d_params)
@@ -288,36 +305,36 @@ class Module(object):
         # clipped_se_gradients = constrainted_se_grads_fromD
 
         ## D_GRL_007
-        # constrainted_se_grads_fromD = []
-        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-        #   grad_shape = grad1.shape.as_list()
-        #   vec1 = tf.reshape(grad1,[-1])
-        #   vec2 = tf.reshape(grad2,[-1])
-        #   prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
-        #   constrainted_grad2 = tf.reshape(prj_on_vec1, grad_shape)
-        #   constrainted_se_grads_fromD.append(constrainted_grad2)
-        # clipped_se_gradients = constrainted_se_grads_fromD
-
-        ## D_GRL_008
-        shape_list = []
-        split_sizes = []
-        vec1 = tf.constant([])
-        vec2 = tf.constant([])
         constrainted_se_grads_fromD = []
         for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
           grad_shape = grad1.shape.as_list()
-          shape_list.append(grad_shape)
-          vec1_t = tf.reshape(grad1,[-1])
-          vec2_t = tf.reshape(grad2,[-1])
-          vec_len = vec1_t.shape.as_list()[0]
-          split_sizes.append(vec_len)
-          vec1 = tf.concat([vec1, vec1_t], 0)
-          vec2 = tf.concat([vec2, vec2_t], 0)
-        prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
-        # print(len(shape_list), flush=True)
-        constrainted_se_grads_fromD = tf.split(prj_on_vec1, split_sizes)
-        constrainted_se_grads_fromD = [
-            tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
+          vec1 = tf.reshape(grad1,[-1])
+          vec2 = tf.reshape(grad2,[-1])
+          prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+          constrainted_grad2 = tf.reshape(prj_on_vec1, grad_shape)
+          constrainted_se_grads_fromD.append(constrainted_grad2)
+        clipped_se_gradients = constrainted_se_grads_fromD
+
+        ## D_GRL_008
+        # shape_list = []
+        # split_sizes = []
+        # vec1 = tf.constant([])
+        # vec2 = tf.constant([])
+        # constrainted_se_grads_fromD = []
+        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+        #   grad_shape = grad1.shape.as_list()
+        #   shape_list.append(grad_shape)
+        #   vec1_t = tf.reshape(grad1,[-1])
+        #   vec2_t = tf.reshape(grad2,[-1])
+        #   vec_len = vec1_t.shape.as_list()[0]
+        #   split_sizes.append(vec_len)
+        #   vec1 = tf.concat([vec1, vec1_t], 0)
+        #   vec2 = tf.concat([vec2, vec2_t], 0)
+        # prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+        # # print(len(shape_list), flush=True)
+        # constrainted_se_grads_fromD = tf.split(prj_on_vec1, split_sizes)
+        # constrainted_se_grads_fromD = [
+        #     tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
 
       clipped_se_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # merge se_grad from se_loss and D_loss
       d_gradients = tf.gradients(
@@ -487,8 +504,10 @@ class Module(object):
 
 
   def clean_and_enhanced_mag_discriminator(self, clean_mag_batch, est_mag_batch):
+    deep_features = []
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
     outputs = tf.concat([clean_mag_batch, est_mag_batch], axis=0)
+    # deep_features.append(outputs) # [batch*2, time, f]
     zeros = tf.zeros(clean_mag_batch.shape[0], dtype=tf.int32)
     ones = tf.ones(est_mag_batch.shape[0], dtype=tf.int32)
     labels = tf.concat([zeros, ones], axis=0)
@@ -496,11 +515,14 @@ class Module(object):
     # print(outputs.shape.as_list(), ' dddddddddddddddddddddd test shape')
 
     outputs = self.variables.d_blstm(outputs, training=training) # [batch, time, fea]
+    deep_features.append(outputs) # [batch*2 time f]
     outputs = self.variables.d_lstm(outputs, training=training) # [batch, fea]
+    deep_features.append(outputs) # [batch*2, time, f]
     for dense in self.variables.d_denses:
       outputs = dense(outputs)
+      deep_features.append(outputs)
     logits = outputs
-    return logits, onehot_labels
+    return logits, onehot_labels, deep_features
 
 
   def CCNN_CRNN_CFC(self, mixed_spec_batch, training=False):
