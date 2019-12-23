@@ -1,6 +1,6 @@
 import tensorflow as tf
 import os
-import numpy as numpy
+import numpy as np
 import time
 import collections
 from pathlib import Path
@@ -23,7 +23,7 @@ def __relative_impr(prev_, new_, declining=False):
 
 class TrainOutputs(
     collections.namedtuple("TrainOutputs",
-                           ("avg_loss", "cost_time", "lr"))):
+                           ("avg_loss", "avg_show_losses", "cost_time", "lr"))):
   pass
 
 
@@ -34,26 +34,67 @@ def train_one_epoch(sess, train_model, train_log_file):
   one_batch_time = time.time()
 
   total_i = PARAM.n_train_set_records//PARAM.batch_size
+  all_losses = {
+    'real_net_mag_mse': train_model.real_net_mag_mse,
+    'real_net_reMagMse': train_model.real_net_reMagMse,
+    'real_net_spec_mse': train_model.real_net_spec_mse,
+    'real_net_reSpecMse': train_model.real_net_reSpecMse,
+    'real_net_wav_L1': train_model.real_net_wav_L1,
+    'real_net_wav_L2': train_model.real_net_wav_L2,
+    'real_net_reWavL2': train_model.real_net_reWavL2,
+    'real_net_sdrV1': train_model.real_net_sdrV1,
+    'real_net_sdrV2': train_model.real_net_sdrV2,
+    'real_net_sdrV3': train_model.real_net_sdrV3,
+    'real_net_cosSimV1': train_model.real_net_cosSimV1,
+    'real_net_cosSimV1WT10': train_model.real_net_cosSimV1WT10,
+    'real_net_cosSimV2': train_model.real_net_cosSimV2,
+    'real_net_specTCosSimV1': train_model.real_net_specTCosSimV1,
+    'real_net_specFCosSimV1': train_model.real_net_specFCosSimV1,
+    'real_net_specTFCosSimV1': train_model.real_net_specTFCosSimV1,
+    'real_net_stSDRV3': train_model.real_net_stSDRV3,
+    'd_loss': train_model.d_loss,
+    'deep_features_loss': train_model._deep_features_loss,
+    'deep_features_losses': train_model._deep_features_losses,
+  }
+  show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
+  stop_criterion_losses = PARAM.stop_criterion_losses if PARAM.stop_criterion_losses is not None else PARAM.loss_name
+  losses_to_run = [train_model.train_op, train_model.lr, train_model.global_step]
+  for l_name in show_losses:
+    losses_to_run.append(all_losses[l_name])
+  for l_name in stop_criterion_losses:
+    losses_to_run.append(all_losses[l_name])
+
+  total_show_losses_vec = None
+
   while True:
     try:
-      (_, loss, lr, global_step,
-       d_loss,
-       ) = sess.run([train_model.train_op,
-                     train_model.loss,
-                     train_model.lr,
-                     train_model.global_step,
-                     train_model.d_loss
-                     ])
-      tr_loss += loss
+      run_out_losses = sess.run(losses_to_run)
+      _, lr, global_step = run_out_losses[:3]
+      runOut_show_losses = run_out_losses[3:len(PARAM.show_losses)+3]
+      runOut_show_losses = round_lists(runOut_show_losses, 4)
+      runOut_show_losses_vec = np.array(unfold_list(runOut_show_losses))
+      if total_show_losses_vec is None:
+        total_show_losses_vec = np.zeros_like(runOut_show_losses_vec)
+      else:
+        total_show_losses_vec += runOut_show_losses_vec
+
+      runOut_losses_stopCriterion = run_out_losses[-len(PARAM.stop_criterion_losses):]
+      sum_loss_stopCriterion = np.sum(runOut_losses_stopCriterion)
+
+      tr_loss += sum_loss_stopCriterion
       i += 1
-      print("\rtrain: %d/%d, cost %.2fs, loss %.2f, d_loss %.2f         " % (
-          i, total_i, time.time()-one_batch_time,loss, d_loss),
+      print("\r", end="")
+      print("train: %d/%d, cost %.2fs, criterion_loss %.2f, single_losses %s"
+            "      " % (
+                i, total_i, time.time()-one_batch_time, sum_loss_stopCriterion,
+                str(runOut_show_losses)
+            ),
             flush=True, end="")
       one_batch_time = time.time()
       if i % PARAM.batches_to_logging == 0:
         print("\r", end="")
-        msg = "     Minbatch %04d: loss:%.4f, lr:%.2e, Cost time:%ds.\n" % (
-                i, tr_loss/i, lr, time.time()-minbatch_time,
+        msg = "     Minbatch %04d: criterion_loss:%.4f, losses:%s, lr:%.2e, Cost time:%ds.          \n" % (
+                i, tr_loss/i, round_lists(list(total_show_losses_vec / i), 4), lr, time.time()-minbatch_time,
               )
         minbatch_time = time.time()
         misc_utils.print_log(msg, train_log_file)
@@ -62,16 +103,25 @@ def train_one_epoch(sess, train_model, train_log_file):
   print("\r", end="")
   e_time = time.time()
   tr_loss /= i
+  avg_show_losses_vec = total_show_losses_vec / i
   return TrainOutputs(avg_loss=tr_loss,
+                      avg_show_losses=round_lists(list(avg_show_losses_vec), 4),
                       cost_time=e_time-s_time,
                       lr=lr)
 
 
 class EvalOutputs(
     collections.namedtuple("EvalOutputs",
-                           ("avg_loss", "cost_time"))):
+                           ("avg_loss", "avg_show_losses", "cost_time"))):
   pass
 
+def round_lists(lst, rd):
+  return [round(n,rd) if type(n) is not list else round_lists(n,rd) for n in lst]
+
+def unfold_list(lst):
+  ans_lst = []
+  [ans_lst.append(n) if type(n) is not list else ans_lst.extend(unfold_list(n)) for n in lst]
+  return ans_lst
 
 def eval_one_epoch(sess, val_model):
   val_s_time = time.time()
@@ -80,26 +130,60 @@ def eval_one_epoch(sess, val_model):
 
   i = 0
   total_i = PARAM.n_val_set_records//PARAM.batch_size
+  all_losses = {
+    'real_net_mag_mse': val_model.real_net_mag_mse,
+    'real_net_reMagMse': val_model.real_net_reMagMse,
+    'real_net_spec_mse': val_model.real_net_spec_mse,
+    'real_net_reSpecMse': val_model.real_net_reSpecMse,
+    'real_net_wav_L1': val_model.real_net_wav_L1,
+    'real_net_wav_L2': val_model.real_net_wav_L2,
+    'real_net_reWavL2': val_model.real_net_reWavL2,
+    'real_net_sdrV1': val_model.real_net_sdrV1,
+    'real_net_sdrV2': val_model.real_net_sdrV2,
+    'real_net_sdrV3': val_model.real_net_sdrV3,
+    'real_net_cosSimV1': val_model.real_net_cosSimV1,
+    'real_net_cosSimV1WT10': val_model.real_net_cosSimV1WT10,
+    'real_net_cosSimV2': val_model.real_net_cosSimV2,
+    'real_net_specTCosSimV1': val_model.real_net_specTCosSimV1,
+    'real_net_specFCosSimV1': val_model.real_net_specFCosSimV1,
+    'real_net_specTFCosSimV1': val_model.real_net_specTFCosSimV1,
+    'real_net_stSDRV3': val_model.real_net_stSDRV3,
+    'd_loss': val_model.d_loss,
+    'deep_features_loss': val_model._deep_features_loss,
+    'deep_features_losses': val_model._deep_features_losses,
+  }
+  show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
+  stop_criterion_losses = PARAM.stop_criterion_losses if PARAM.stop_criterion_losses is not None else PARAM.loss_name
+  losses_to_run = []
+  for l_name in show_losses:
+    losses_to_run.append(all_losses[l_name])
+  for l_name in stop_criterion_losses:
+    losses_to_run.append(all_losses[l_name])
+
+  total_show_losses_vec = None
   while True:
     try:
-      (loss,
-       d_loss,
-       #  debug_mag,
-       #  real_net_mag_mse, real_net_spec_mse,
-       #  real_net_wavL1, real_net_wavL2,
-       ) = sess.run([val_model.loss,
-                     val_model.d_loss,
-                     #  val_model.debug_mag,
-                     #  val_model.real_net_mag_mse, val_model.real_net_spec_mse,
-                     #  val_model.real_net_wav_L1, val_model.real_net_wav_L2,
-                     ])
+      run_out_losses = sess.run(losses_to_run)
+      runOut_show_losses = run_out_losses[:len(PARAM.show_losses)]
+      runOut_show_losses = round_lists(runOut_show_losses, 4)
+      runOut_show_losses_vec = np.array(unfold_list(runOut_show_losses))
+      if total_show_losses_vec is None:
+        total_show_losses_vec = np.zeros_like(runOut_show_losses_vec)
+      else:
+        total_show_losses_vec += runOut_show_losses_vec
+
+      runOut_losses_stopCriterion = run_out_losses[-len(PARAM.stop_criterion_losses):]
+      sum_loss_stopCriterion = np.sum(runOut_losses_stopCriterion)
       # print("\n", loss, real_net_mag_mse, real_net_spec_mse, real_net_wavL1, real_net_wavL2, flush=True)
-      # import numpy as np
       # print(np.mean(debug_mag), np.var(debug_mag), np.min(debug_mag), np.max(debug_mag), loss, flush=True)
-      total_loss += loss
+      total_loss += sum_loss_stopCriterion
       i += 1
-      print("\rvalidate: %d/%d, cost %.2fs, loss %.2f, d_loss %.2f          " % (
-          i, total_i, time.time()-ont_batch_time, loss, d_loss),
+      print("\r", end="")
+      print("validate: %d/%d, cost %.2fs, loss %.2f, single_losses %s"
+            "          " % (
+                i, total_i, time.time()-ont_batch_time, sum_loss_stopCriterion,
+                str(runOut_show_losses)
+            ),
             flush=True, end="")
       ont_batch_time = time.time()
     except tf.errors.OutOfRangeError:
@@ -107,8 +191,10 @@ def eval_one_epoch(sess, val_model):
 
   print("\r", end="")
   avg_loss = total_loss / i
+  avg_show_losses_vec = total_show_losses_vec / i
   val_e_time = time.time()
   return EvalOutputs(avg_loss=avg_loss,
+                     avg_show_losses=round_lists(list(avg_show_losses_vec),4),
                      cost_time=val_e_time-val_s_time)
 
 
@@ -132,7 +218,9 @@ def main():
     ModelC, VariablesC = model_builder.get_model_class_and_var()
 
     variables = VariablesC()
-    train_model = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
+    train_model_raw = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
+    train_model = train_model_raw
+    train_model_df = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean, True)
     # tf.compat.v1.get_variable_scope().reuse_variables()
     val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, variables, val_inputs.mixed,val_inputs.clean)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
@@ -150,24 +238,37 @@ def main():
 
   # region validation before training
   sess.run(val_inputs.initializer)
+  stop_criterion_losses = PARAM.stop_criterion_losses if PARAM.stop_criterion_losses is not None else PARAM.loss_name
+  show_losses = PARAM.show_losses if PARAM.show_losses is not None else PARAM.loss_name
+  misc_utils.print_log("stop criterion losses: "+str(stop_criterion_losses)+"\n", train_log_file)
+  misc_utils.print_log("show losses: "+str(show_losses)+"\n", train_log_file)
   evalOutputs_prev = eval_one_epoch(sess, val_model)
-  misc_utils.print_log("                                                                         \n\n",
+  misc_utils.print_log("                                            "
+                       "                                            "
+                       "                                         \n\n",
                        train_log_file, no_time=True)
-  val_msg = "PRERUN.val> AVG.LOSS:%.4F, Cost itme:%.4Fs.\n" % (evalOutputs_prev.avg_loss,
-                                                               evalOutputs_prev.cost_time)
+  val_msg = "PRERUN.val> AVG.LOSS:%.4F, ALL.LOSS:%s, Cost itme:%.4Fs.\n" % (
+      evalOutputs_prev.avg_loss,
+      evalOutputs_prev.avg_show_losses,
+      evalOutputs_prev.cost_time)
   misc_utils.print_log(val_msg, train_log_file)
 
   assert PARAM.s_epoch > 0, 'start epoch > 0 is required.'
   model_abandon_time = 0
+
+  deep_feature_loss_start = False
   for epoch in range(PARAM.s_epoch, PARAM.max_epoch+1):
     misc_utils.print_log("\n\n", train_log_file, no_time=True)
+    misc_utils.print_log("stop criterion losses: "+str(stop_criterion_losses)+"\n", train_log_file)
+    misc_utils.print_log("show losses: "+str(show_losses)+"\n", train_log_file)
     misc_utils.print_log("  Epoch %03d:\n" % epoch, train_log_file)
 
     # train
     sess.run(train_inputs.initializer)
     trainOutputs = train_one_epoch(sess, train_model, train_log_file)
-    misc_utils.print_log("     Train     > loss:%.4f, Cost time:%ds.\n" % (
+    misc_utils.print_log("     Train     > loss:%.4f, losses:%s, Cost time:%ds.\n" % (
         trainOutputs.avg_loss,
+        trainOutputs.avg_show_losses,
         trainOutputs.cost_time),
         train_log_file)
 
@@ -175,8 +276,9 @@ def main():
     sess.run(val_inputs.initializer)
     evalOutputs = eval_one_epoch(sess, val_model)
     val_loss_rel_impr = __relative_impr(evalOutputs_prev.avg_loss, evalOutputs.avg_loss, True)
-    misc_utils.print_log("     Validation> loss:%.4f, Cost time:%ds.\n" % (
+    misc_utils.print_log("     Validation> loss:%.4f, losses:%s, Cost time:%ds.\n" % (
         evalOutputs.avg_loss,
+        evalOutputs.avg_show_losses,
         evalOutputs.cost_time),
         train_log_file)
 
@@ -210,7 +312,13 @@ def main():
       msg = "finished, too small learning rate %e.\n" % trainOutputs.lr
       tf.logging.info(msg)
       misc_utils.print_log(msg, train_log_file)
-      break
+      if PARAM.use_deep_feature_loss and (not deep_feature_loss_start):
+        model_abandon_time = 0
+        deep_feature_loss_start = True
+        train_model = train_model_df
+        evalOutputs_prev.avg_loss = 9999.0
+      else:
+        break
 
   sess.close()
   misc_utils.print_log("\n", train_log_file, no_time=True)
