@@ -314,7 +314,9 @@ def main():
         model_abandon_time = 0
         deep_feature_loss_start = True
         train_model = train_model_df
-        evalOutputs_prev.avg_loss = 9999.0
+        evalOutputs_prev = EvalOutputs(avg_loss=99999.0,
+                                       avg_show_losses=evalOutputs_prev.avg_show_losses,
+                                       cost_time=evalOutputs_prev.cost_time)
         stop_criterion_losses = ["real_net_spec_mse", "deep_features_loss"]
       else:
         break

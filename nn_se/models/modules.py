@@ -233,9 +233,10 @@ class Module(object):
     self._se_loss = self.get_loss(forward_outputs)
 
     self._d_loss = tf.reduce_sum(tf.zeros([1]))
+    self._deep_features_loss = 0.0
+    self._deep_features_losses = 0.0
     if PARAM.use_adversarial_discriminator:
       self._d_loss, self._deep_features_losses = self.get_discriminator_loss(forward_outputs)
-      self._deep_features_loss = 0.0
       for l in self._deep_features_losses:
         self._deep_features_loss += l
 
