@@ -30,6 +30,7 @@ class TrainOutputs(
 def train_one_epoch(sess, train_model, train_log_file,
                     stop_criterion_losses, show_losses):
   tr_loss, i, lr = 0.0, 0, -1
+  total_show_losses_vec = None
   s_time = time.time()
   minbatch_time = time.time()
   one_batch_time = time.time()
@@ -65,8 +66,6 @@ def train_one_epoch(sess, train_model, train_log_file,
   for l_name in stop_criterion_losses:
     losses_to_run.append(all_losses[l_name])
 
-  total_show_losses_vec = None
-
   while True:
     try:
       run_out_losses = sess.run(losses_to_run)
@@ -76,8 +75,7 @@ def train_one_epoch(sess, train_model, train_log_file,
       runOut_show_losses_vec = np.array(unfold_list(runOut_show_losses))
       if total_show_losses_vec is None:
         total_show_losses_vec = np.zeros_like(runOut_show_losses_vec)
-      else:
-        total_show_losses_vec += runOut_show_losses_vec
+      total_show_losses_vec += runOut_show_losses_vec
 
       runOut_losses_stopCriterion = run_out_losses[-len(stop_criterion_losses):]
       sum_loss_stopCriterion = np.sum(runOut_losses_stopCriterion)
@@ -170,8 +168,7 @@ def eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses):
       runOut_show_losses_vec = np.array(unfold_list(runOut_show_losses))
       if total_show_losses_vec is None:
         total_show_losses_vec = np.zeros_like(runOut_show_losses_vec)
-      else:
-        total_show_losses_vec += runOut_show_losses_vec
+      total_show_losses_vec += runOut_show_losses_vec
 
       runOut_losses_stopCriterion = run_out_losses[-len(stop_criterion_losses):]
       sum_loss_stopCriterion = np.sum(runOut_losses_stopCriterion)
