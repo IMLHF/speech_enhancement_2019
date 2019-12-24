@@ -32,10 +32,17 @@ class DISCRIMINATOR_AD_MODEL(Module):
     deep_features: list,
     '''
     losses = []
-    for deep_f in deep_features:
+    for deep_f in deep_features[:-1]:
       labels, ests = tf.split(deep_f, 2, axis=0) # [batch,time,f]
       loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0))
       losses.append(loss)
+
+    deep_f = deep_features[-1]
+    if PARAM.deepFeatureLoss_softmaxLogits:
+      deep_f = tf.nn.softmax(deep_f)
+    labels, ests = tf.split(deep_f, 2, axis=0) # [batch,time,f]
+    loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0))
+    losses.append(loss)
     return losses
 
 
