@@ -70,15 +70,15 @@ class RealVariables(object):
                                            initializer=tf.constant(PARAM.learning_rate))
 
     # linear_coef and log_bias in log features # f = a*[log(bx+c)-log(c)], (a,b,c>0), init:a=0.1,b=1.0,c=1e-6
-    self._f_log_a_var = tf.compat.v1.get_variable('discriminator/f_log_a', dtype=tf.float32,
+    self._f_log_a_var = tf.compat.v1.get_variable('LogFilter/f_log_a', dtype=tf.float32,
                                                   initializer=tf.constant(PARAM.f_log_a), trainable=PARAM.f_log_var_trainable)
-    self._f_log_b_var = tf.compat.v1.get_variable('discriminator/f_log_b', dtype=tf.float32,
+    self._f_log_b_var = tf.compat.v1.get_variable('LogFilter/f_log_b', dtype=tf.float32,
                                                   initializer=tf.constant(PARAM.f_log_b), trainable=PARAM.f_log_var_trainable)
-    self._f_log_c_var = tf.compat.v1.get_variable('discriminator/f_log_c', dtype=tf.float32,
+    self._f_log_c_var = tf.compat.v1.get_variable('LogFilter/f_log_c', dtype=tf.float32,
                                                   initializer=tf.constant(PARAM.f_log_c), trainable=PARAM.f_log_var_trainable)
-    self._f_log_a = 1e-6 + tf.nn.relu(self._f_log_a_var)
-    self._f_log_b = 1e-6 + tf.nn.relu(self._f_log_b_var)
-    self._f_log_c = 1e-6 + tf.nn.relu(self._f_log_c_var)
+    self._f_log_a = PARAM.log_filter_eps + tf.nn.relu(self._f_log_a_var)
+    self._f_log_b = PARAM.log_filter_eps + tf.nn.relu(self._f_log_b_var)
+    self._f_log_c = PARAM.log_filter_eps + tf.nn.relu(self._f_log_c_var)
 
     # CNN
     self.conv2d_layers = []
@@ -214,6 +214,10 @@ class Module(object):
     self.new_lr = tf.compat.v1.placeholder(tf.float32, name='new_lr')
     self.assign_lr = tf.compat.v1.assign(self._lr, self.new_lr)
 
+    # for reset global_step
+    self.new_step = tf.compat.v1.placeholder(tf.int32, name='new_step')
+    self.assign_step = tf.compat.v1.assign(self._global_step, self.new_step)
+
     # for lr warmup
     if PARAM.use_lr_warmup:
       self._lr = misc_utils.noam_scheme(self._lr, self.global_step, warmup_steps=PARAM.warmup_steps)
@@ -244,12 +248,22 @@ class Module(object):
       self._d_loss, self._deep_features_losses = self.get_discriminator_loss(forward_outputs)
       for l in self._deep_features_losses:
         self._deep_features_loss += l
+      # if use_deep_feature_loss:
+      #   print('used_deepfeatureloss')
+      #   self._d_loss = tf.stop_gradient(self._d_loss) + 200.0
 
     self._loss = self._se_loss + self._d_loss
 
-    trainable_variables = tf.compat.v1.trainable_variables()
-    self.save_variables.extend([var for var in trainable_variables])
-    self.saver = tf.compat.v1.train.Saver(self.save_variables, max_to_keep=PARAM.max_keep_ckpt, save_relative_paths=True)
+    # trainable_variables = tf.compat.v1.trainable_variables()
+    d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
+    if PARAM.add_logFilter_in_Discrimitor:
+      d_params.extend(tf.compat.v1.trainable_variables(scope='LogFilter*'))
+      # misc_utils.show_variables(d_params)
+    se_net_params = tf.compat.v1.trainable_variables(scope='se_net*')
+    self.save_variables.extend(se_net_params + d_params)
+    self.saver = tf.compat.v1.train.Saver(self.save_variables,
+                                          max_to_keep=PARAM.max_keep_ckpt,
+                                          save_relative_paths=True)
 
     if mode == PARAM.MODEL_VALIDATE_KEY or mode == PARAM.MODEL_INFER_KEY:
       return
@@ -257,16 +271,15 @@ class Module(object):
     # optimizer
     # opt = tf.keras.optimizers.Adam(learning_rate=self._lr)
     opt = tf.compat.v1.train.AdamOptimizer(self._lr)
-    no_d_params = tf.compat.v1.trainable_variables(scope='se_net*')
-    # misc_utils.show_variables(no_d_params)
+    # misc_utils.show_variables(se_net_params)
     gradients = tf.gradients(
       self._se_loss,
-      no_d_params,
+      se_net_params,
       colocate_gradients_with_ops=True
     )
     clipped_gradients, gradient_norm = tf.clip_by_global_norm(
         gradients, PARAM.max_gradient_norm)
-    self._train_op = opt.apply_gradients(zip(clipped_gradients, no_d_params),
+    self._train_op = opt.apply_gradients(zip(clipped_gradients, se_net_params),
                                          global_step=self.global_step)
 
 
@@ -274,20 +287,19 @@ class Module(object):
     if use_deep_feature_loss:
       deep_f_loss_grad = tf.gradients(
         self._deep_features_loss,
-        no_d_params,
+        se_net_params,
         colocate_gradients_with_ops=True
       )
       deep_f_loss_grad, deep_f_gra_norm = tf.clip_by_global_norm(
           deep_f_loss_grad, PARAM.max_gradient_norm)
       clipped_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, deep_f_loss_grad)]
-      self._train_op = opt.apply_gradients(zip(clipped_gradients, no_d_params),
+      self._train_op = opt.apply_gradients(zip(clipped_gradients, se_net_params),
                                            global_step=self.global_step)
+      # print("use deep features loss", flush=True)
     elif PARAM.model_name == "DISCRIMINATOR_AD_MODEL": # if use D as deep_feature_loss then stop train D
-      d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
-      # misc_utils.show_variables(d_params)
       se_gradients = tf.gradients(
           self._d_loss,
-          no_d_params,
+          se_net_params,
           colocate_gradients_with_ops=True
       )
       clipped_se_gradients, _ = tf.clip_by_global_norm(
@@ -297,9 +309,9 @@ class Module(object):
       clipped_se_gradients = [grad*PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE for grad in clipped_se_gradients]
       if PARAM.D_GRL:
         clipped_se_gradients = [-grad for grad in clipped_se_gradients] # GRL
-      for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-        print(grad1.shape.as_list(), grad2.shape.as_list())
-        print('233', tf.reduce_sum(grad1*grad2,-1).shape.as_list(), tf.reduce_sum(grad1*grad1,-1).shape.as_list())
+      # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
+      #   print(grad1.shape.as_list(), grad2.shape.as_list())
+      #   print('233', tf.reduce_sum(grad1*grad2,-1).shape.as_list(), tf.reduce_sum(grad1*grad1,-1).shape.as_list())
       if PARAM.D_Grad_DCC: # Direction Consistent Constraints
         ## D_GRL_005
         # clipped_se_gradients = [
@@ -357,10 +369,10 @@ class Module(object):
 
       ## D_GRL_xxxT1
       all_clipped_grad = clipped_se_gradients + clipped_d_gradients
-      all_params = no_d_params + d_params
+      all_params = se_net_params + d_params
       self._train_op = opt.apply_gradients(zip(all_clipped_grad, all_params),
                                            global_step=self.global_step)
-      # _train_op_se = opt.apply_gradients(zip(clipped_se_gradients, no_d_params),
+      # _train_op_se = opt.apply_gradients(zip(clipped_se_gradients, se_net_params),
       #                                    global_step=self.global_step)
       # _train_op_d = opt.apply_gradients(zip(clipped_d_gradients, d_params),
       #                                   global_step=self.global_step)
@@ -418,9 +430,12 @@ class Module(object):
     mask = self.CNN_RNN_FC(mixed_mag_batch, training)
 
     if PARAM.net_out_mask:
-      est_clean_mag_batch = tf.nn.relu(tf.multiply(mask, mixed_mag_batch)) # mag estimated
+      est_clean_mag_batch = tf.multiply(mask, mixed_mag_batch) # mag estimated
     else:
-      est_clean_mag_batch = tf.nn.relu(mask)
+      est_clean_mag_batch = mask
+
+    if PARAM.feature_type == "DFT":
+      est_clean_mag_batch = tf.nn.relu(est_clean_mag_batch)
 
     if PARAM.use_wav_as_feature:
       est_clean_spec_batch = est_clean_mag_batch
@@ -524,7 +539,7 @@ class Module(object):
       a = self.variables._f_log_a
       b = self.variables._f_log_b
       c = self.variables._f_log_c
-      outputs = (tf.log(outputs * b + c) - tf.log(c))*a
+      outputs = misc_utils.LogFilter_of_Loss(a,b,c,outputs,PARAM.LogFilter_type)
 
     # deep_features.append(outputs) # [batch*2, time, f]
     zeros = tf.zeros(clean_mag_batch.shape[0], dtype=tf.int32)
@@ -641,6 +656,9 @@ class Module(object):
 
   def change_lr(self, sess, new_lr):
     sess.run(self.assign_lr, feed_dict={self.new_lr:new_lr})
+
+  def change_global_step(self, sess, new_step):
+    sess.run(self.assign_step, feed_dict={self.new_step:new_step})
 
   @property
   def mixed_wav_batch_in(self):
