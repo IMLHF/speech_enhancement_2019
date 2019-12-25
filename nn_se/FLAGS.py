@@ -99,7 +99,7 @@ class BaseConfig(StaticKey):
   start_halving_impr = 0.01 # no use for (use_lr_warmup == true)
   lr_halving_rate = 0.7 # no use for (use_lr_warmup == true)
 
-  use_adversarial_discriminator = False
+  # just for "DISCRIMINATOR_AD_MODEL"
   D_GRL = False
   discirminator_grad_coef = 1.0
   D_Grad_DCC = False # DCC:Direction Consistent Constraints
@@ -108,12 +108,12 @@ class BaseConfig(StaticKey):
 
   cnn_shortcut = None # None | "add" | "multiply"
 
-  use_deep_feature_loss = False # just for discrimitor Model
+  use_deep_feature_loss = False # just for "DISCRIMINATOR_AD_MODEL"
   deepFeatureLoss_softmaxLogits = False
 
   feature_type = "DFT" # DFT | DCT | QCT
 
-  # just for discrimitor
+  # just for "DISCRIMINATOR_AD_MODEL"
   add_logFilter_in_Discrimitor = False # add log Value Filter to features of Discrimintor.
   add_logFilter_in_SE_Loss = False # add log Value Filter to SE loss. Log Filter params have no grad.
 
@@ -232,7 +232,6 @@ class nn_se_rSpecMSE_addCnn(p40): # done p40
 
 class nn_se_rSpecMSE_D_GRL_001(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   blstm_layers = 1
   lstm_layers = 1
@@ -243,7 +242,6 @@ class nn_se_rSpecMSE_D_GRL_001(p40): # done p40
 
 class nn_se_rSpecMSE_D_GRL_002(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   blstm_layers = 1
   lstm_layers = 1
@@ -254,7 +252,6 @@ class nn_se_rSpecMSE_D_GRL_002(p40): # done p40
 
 class nn_se_rSpecMSE_D_GRL_003(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   blstm_layers = 1
   lstm_layers = 1
@@ -265,7 +262,6 @@ class nn_se_rSpecMSE_D_GRL_003(p40): # done p40
 
 class nn_se_rSpecMSE_D_GRL_004(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   blstm_layers = 1
   lstm_layers = 1
@@ -280,7 +276,6 @@ class nn_se_rSpecMSE_D_GRL_005(p40): # done p40
   vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -295,7 +290,6 @@ class nn_se_rSpecMSE_D_GRL_006(p40): # done p40
   sign constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -310,7 +304,6 @@ class nn_se_rSpecMSE_D_GRL_306(p40): # done p40
   sign constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -325,7 +318,6 @@ class nn_se_rSpecMSE_D_GRL_406(p40): # done p40
   sign constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -340,7 +332,6 @@ class nn_se_rSpecMSE_D_GRL_007(p40): # done p40
   half full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -355,7 +346,6 @@ class nn_se_rSpecMSE_D_GRL_307(p40): # done p40
   half full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -370,7 +360,6 @@ class nn_se_rSpecMSE_D_GRL_007T1(p40): # done p40
   half full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -385,7 +374,6 @@ class nn_se_rSpecMSE_D_GRL_307T1(p40): # done p40
   half full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -401,7 +389,6 @@ class nn_se_rSpecMSE_D_GRL_007T1_DFL(p40): # running p40
   half full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -419,7 +406,6 @@ class nn_se_rSpecMSE_D_GRL_007T1_softDFL(p40): # running p40
   half full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -438,7 +424,6 @@ class nn_se_rSpecMSE_D_GRL_008(p40): # done p40
   full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -453,7 +438,6 @@ class nn_se_rSpecMSE_D_GRL_308(p40): # done p40
   full vec constrained
   '''
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = True
   D_Grad_DCC = True
   blstm_layers = 1
@@ -465,7 +449,6 @@ class nn_se_rSpecMSE_D_GRL_308(p40): # done p40
 
 class nn_se_rSpecMSE_D_noGRL(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
-  use_adversarial_discriminator = True
   D_GRL = False
   blstm_layers = 1
   lstm_layers = 1

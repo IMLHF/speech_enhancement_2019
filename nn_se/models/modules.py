@@ -227,15 +227,17 @@ class Module(object):
     # self.nosie_mag_batch = tf.math.abs(self.noise_spec_batch)
     if PARAM.use_wav_as_feature:
       self.clean_mag_batch = self.clean_spec_batch
-    else:
+    elif PARAM.feature_type == "DFT":
       self.clean_mag_batch = tf.math.abs(self.clean_spec_batch) # mag label
+    elif PARAM.feature_type == "DCT":
+      self.clean_mag_batch = self.clean_spec_batch # DCT real feat
 
     self._se_loss = self.get_loss(forward_outputs)
 
     self._d_loss = tf.reduce_sum(tf.zeros([1]))
     self._deep_features_loss = 0.0
     self._deep_features_losses = 0.0
-    if PARAM.use_adversarial_discriminator:
+    if PARAM.model_name == "DISCRIMINATOR_AD_MODEL":
       self._d_loss, self._deep_features_losses = self.get_discriminator_loss(forward_outputs)
       for l in self._deep_features_losses:
         self._deep_features_loss += l
@@ -273,7 +275,7 @@ class Module(object):
       clipped_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, deep_f_loss_grad)]
       self._train_op = opt.apply_gradients(zip(clipped_gradients, no_d_params),
                                            global_step=self.global_step)
-    elif PARAM.use_adversarial_discriminator: # if use D as deep_feature_loss then stop train D
+    elif PARAM.model_name == "DISCRIMINATOR_AD_MODEL": # if use D as deep_feature_loss then stop train D
       d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
       self.save_variables.extend([var for var in d_params])
       # misc_utils.show_variables(d_params)
@@ -284,7 +286,7 @@ class Module(object):
       )
       clipped_se_gradients, _ = tf.clip_by_global_norm(
         se_gradients, PARAM.max_gradient_norm)
-      # ifD_passGrad_to_SE = tf.cast(tf.bitwise.bitwise_and(self.global_step//2250, 1), tf.float32)
+      # ifD_passGrad_to_SE = tf.cast(tf.bitwise.bitwise_and(self.global_step//2250, 1), tf.float32) # Alternate Training for GANs
       ifD_passGrad_to_SE = 1.0
       clipped_se_gradients = [grad*PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE for grad in clipped_se_gradients]
       if PARAM.D_GRL:
@@ -401,8 +403,10 @@ class Module(object):
     mixed_spec_batch = misc_utils.tf_batch_stft(mixed_wav_batch, PARAM.frame_length, PARAM.frame_step)
     if PARAM.use_wav_as_feature:
       mixed_mag_batch = mixed_spec_batch
-    else:
+    elif PARAM.feature_type == "DFT":
       mixed_mag_batch = tf.math.abs(mixed_spec_batch)
+    elif PARAM.feature_type == "DCT":
+      mixed_mag_batch = mixed_spec_batch
     self.mixed_angle_batch = tf.math.angle(mixed_spec_batch)
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
     mask = self.CNN_RNN_FC(mixed_mag_batch, training)
@@ -414,8 +418,10 @@ class Module(object):
 
     if PARAM.use_wav_as_feature:
       est_clean_spec_batch = est_clean_mag_batch
-    else:
+    elif PARAM.feature_type == "DFT":
       est_clean_spec_batch = tf.complex(est_clean_mag_batch, 0.0) * tf.exp(tf.complex(0.0, self.mixed_angle_batch)) # complex
+    elif PARAM.feature_type == "DCT":
+      est_clean_spec_batch = est_clean_mag_batch
     _mixed_wav_len = tf.shape(mixed_wav_batch)[-1]
     _est_clean_wav_batch = misc_utils.tf_batch_istft(est_clean_spec_batch, PARAM.frame_length, PARAM.frame_step)
     est_clean_wav_batch = tf.slice(_est_clean_wav_batch, [0,0], [-1, _mixed_wav_len]) # if stft.pad_end=True, so est_wav may be longger than mixed.
