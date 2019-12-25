@@ -234,8 +234,9 @@ def main():
 
     variables = VariablesC()
     train_model_raw = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
+    train_model_df = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean,
+                            use_deep_feature_loss=True)
     train_model = train_model_raw
-    train_model_df = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean, True)
     # tf.compat.v1.get_variable_scope().reuse_variables()
     val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, variables, val_inputs.mixed,val_inputs.clean)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
