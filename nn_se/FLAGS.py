@@ -44,7 +44,7 @@ class BaseConfig(StaticKey):
 
   """
   @param model_name:
-  CNN_RNN_FC_REAL_MASK_MODEL, CCNN_CRNN_CFC_COMPLEX_MASK_MODEL,
+  CNN_RNN_FC_REAL_MASK_MODEL, DISCRIMINATOR_AD_MODEL, CCNN_CRNN_CFC_COMPLEX_MASK_MODEL,
   RC_HYBIRD_MODEL, RR_HYBIRD_MODEL
   """
   model_name = "CNN_RNN_FC_REAL_MASK_MODEL"
@@ -57,11 +57,13 @@ class BaseConfig(StaticKey):
   real_net_specTCosSimV1, real_net_specFCosSimV1, real_net_specTFCosSimV1,
   real_net_last_blstm_fb_orthogonal,
   """
-  relative_loss_AFD = 1000.0
+  relative_loss_epsilon = 0.001
   st_frame_length_for_loss = 512
   st_frame_step_for_loss = 128
   sdrv3_bias = None # float, a bias will be added before vector dot multiply.
   loss_name = ["real_net_mag_mse"]
+  stop_criterion_losses = None
+  show_losses = None
   loss_weight = []
   use_wav_as_feature = False
   net_out_mask = True
@@ -100,11 +102,20 @@ class BaseConfig(StaticKey):
   use_adversarial_discriminator = False
   D_GRL = False
   discirminator_grad_coef = 1.0
-  D_Grad_DCC = False
+  D_Grad_DCC = False # DCC:Direction Consistent Constraints
   se_grad_fromD_coef = 1.0
   D_loss_coef = 1.0
 
   cnn_shortcut = None # None | "add" | "multiply"
+
+  use_deep_feature_loss = False # just for discrimitor Model
+  deepFeatureLoss_softmaxLogits = False
+
+  feature_type = "DFT" # DFT | DCT | QCT
+
+  # just for discrimitor
+  add_logFilter_in_Discrimitor = False # add log Value Filter to features of Discrimintor.
+  add_logFilter_in_SE_Loss = False # add log Value Filter to SE loss. Log Filter params have no grad.
 
 
 class p40(BaseConfig):
@@ -183,7 +194,25 @@ class nn_se_rSpecMSE(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rSpecMSE_mulCnn(p40): # running p40
+class nn_se_rSpecMSE_fixISTFTWindow(BaseConfig): # running 15123
+  """
+  cnn1blstm1lstm
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+
+class nn_se_rSpecMSE_DCT(BaseConfig): # running 15123
+  """
+  cnn1blstm1lstm DCT features
+  """
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  feature_type = "DCT"
+  fft_dot = 256
+
+class nn_se_rSpecMSE_mulCnn(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -192,7 +221,7 @@ class nn_se_rSpecMSE_mulCnn(p40): # running p40
   loss_name = ["real_net_spec_mse"]
   cnn_shortcut = "multiply"
 
-class nn_se_rSpecMSE_addCnn(p40): # running p40
+class nn_se_rSpecMSE_addCnn(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -201,7 +230,7 @@ class nn_se_rSpecMSE_addCnn(p40): # running p40
   loss_name = ["real_net_spec_mse"]
   cnn_shortcut = "add"
 
-class nn_se_rSpecMSE_D_GRL_001(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_001(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
   use_adversarial_discriminator = True
   D_GRL = True
@@ -212,7 +241,7 @@ class nn_se_rSpecMSE_D_GRL_001(p40): # running p40
   se_grad_fromD_coef = 0.5
   discirminator_grad_coef = 1.5
 
-class nn_se_rSpecMSE_D_GRL_002(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_002(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
   use_adversarial_discriminator = True
   D_GRL = True
@@ -223,7 +252,7 @@ class nn_se_rSpecMSE_D_GRL_002(p40): # running p40
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.5
 
-class nn_se_rSpecMSE_D_GRL_003(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_003(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
   use_adversarial_discriminator = True
   D_GRL = True
@@ -234,7 +263,7 @@ class nn_se_rSpecMSE_D_GRL_003(p40): # running p40
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 3.0
 
-class nn_se_rSpecMSE_D_GRL_004(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_004(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
   use_adversarial_discriminator = True
   D_GRL = True
@@ -246,7 +275,7 @@ class nn_se_rSpecMSE_D_GRL_004(p40): # running p40
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.0
 
-class nn_se_rSpecMSE_D_GRL_005(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_005(p40): # done p40
   '''
   vec constrained
   '''
@@ -276,7 +305,135 @@ class nn_se_rSpecMSE_D_GRL_006(p40): # done p40
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.0
 
-class nn_se_rSpecMSE_D_GRL_007(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_306(p40): # done p40
+  '''
+  sign constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 0.1
+  discirminator_grad_coef = 1.0
+
+class nn_se_rSpecMSE_D_GRL_406(p40): # done p40
+  '''
+  sign constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 0.2
+  discirminator_grad_coef = 1.0
+
+class nn_se_rSpecMSE_D_GRL_007(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+
+class nn_se_rSpecMSE_D_GRL_307(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 0.1
+  discirminator_grad_coef = 1.0
+
+class nn_se_rSpecMSE_D_GRL_007T1(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+
+class nn_se_rSpecMSE_D_GRL_307T1(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 0.1
+  discirminator_grad_coef = 1.0
+  show_losses = ["real_net_spec_mse", "d_loss"]
+
+class nn_se_rSpecMSE_D_GRL_007T1_DFL(p40): # running p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+  use_deep_feature_loss = True
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+
+class nn_se_rSpecMSE_D_GRL_007T1_softDFL(p40): # running p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 1.0
+  discirminator_grad_coef = 1.0
+  use_deep_feature_loss = True
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+
+class nn_se_rSpecMSE_D_GRL_008(p40): # done p40
   '''
   full vec constrained
   '''
@@ -291,6 +448,20 @@ class nn_se_rSpecMSE_D_GRL_007(p40): # running p40
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.0
 
+class nn_se_rSpecMSE_D_GRL_308(p40): # done p40
+  '''
+  full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  use_adversarial_discriminator = True
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.3
+  se_grad_fromD_coef = 0.1
+  discirminator_grad_coef = 1.0
 
 class nn_se_rSpecMSE_D_noGRL(p40): # done p40
   model_name = 'DISCRIMINATOR_AD_MODEL'
@@ -394,7 +565,7 @@ class nn_se_hybirdSpecMSEclipMag_001(p40): # done p40
   complex_clip_mag = True
   complex_clip_mag_max = 1.5
 
-class nn_se_hybirdSpecMSEclipMag_002(p40): # running p40
+class nn_se_hybirdSpecMSEclipMag_002(p40): # done p40
   """
   cnn1blstm1lstm+2bclstm1cdnn
   clip post complex lstm inputs mag
@@ -411,7 +582,7 @@ class nn_se_hybirdSpecMSEclipMag_002(p40): # running p40
   rlstmCell_implementation = 1
   clstmCell_implementation = 2
 
-class nn_se_hybirdSpecMSEclipMag_003(p40): # running p40
+class nn_se_hybirdSpecMSEclipMag_003(p40): # done p40
   """
   cnn1blstm1lstm+2clstm1cdnn
   clip post complex lstm inputs mag
@@ -429,7 +600,7 @@ class nn_se_hybirdSpecMSEclipMag_003(p40): # running p40
   rlstmCell_implementation = 1
   clstmCell_implementation = 2
 
-class nn_se_RRhybirdSpecMSE_001(p40): # running p40
+class nn_se_RRhybirdSpecMSE_001(p40): # done p40
   # cnn1blstm1lstm+2blstm1dnn
   model_name = "RR_HYBIRD_MODEL"
   blstm_layers = 1
@@ -563,7 +734,7 @@ class nn_se_rReMagMSE20(p40): # runnnig p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_AFD = 20.0
+  relative_loss_epsilon = 20.0
 
 class nn_se_rReMagMSE50(p40): # done p40
   """
@@ -572,7 +743,7 @@ class nn_se_rReMagMSE50(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_AFD = 50.0
+  relative_loss_epsilon = 50.0
 
 class nn_se_rReMagMSE100(p40): # done p40
   """
@@ -581,7 +752,7 @@ class nn_se_rReMagMSE100(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_AFD = 100.0
+  relative_loss_epsilon = 100.0
 
 class nn_se_rReMagMSE200(p40): # done p40
   """
@@ -590,7 +761,7 @@ class nn_se_rReMagMSE200(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_AFD = 200.0
+  relative_loss_epsilon = 200.0
 
 class nn_se_rReMagMSE500(p40): # done p40
   """
@@ -599,7 +770,7 @@ class nn_se_rReMagMSE500(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_AFD = 500.0
+  relative_loss_epsilon = 500.0
 
 class nn_se_rReMagMSE1000(p40): # done p40
   """
@@ -608,7 +779,7 @@ class nn_se_rReMagMSE1000(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_AFD = 1000.0
+  relative_loss_epsilon = 1000.0
 
 class nn_se_rReSpecMSE20(p40): # done p40
   """
@@ -617,7 +788,7 @@ class nn_se_rReSpecMSE20(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_AFD = 20.0
+  relative_loss_epsilon = 20.0
 
 class nn_se_rReSpecMSE50(p40): # done p40
   """
@@ -626,7 +797,7 @@ class nn_se_rReSpecMSE50(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_AFD = 50.0
+  relative_loss_epsilon = 50.0
 
 class nn_se_rReSpecMSE100(p40): # done p40
   """
@@ -635,7 +806,7 @@ class nn_se_rReSpecMSE100(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_AFD = 100.0
+  relative_loss_epsilon = 100.0
 
 class nn_se_rReSpecMSE200(p40): # done p40
   """
@@ -644,7 +815,7 @@ class nn_se_rReSpecMSE200(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_AFD = 200.0
+  relative_loss_epsilon = 200.0
 
 class nn_se_rReSpecMSE500(p40): # done p40
   """
@@ -653,7 +824,7 @@ class nn_se_rReSpecMSE500(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_AFD = 500.0
+  relative_loss_epsilon = 500.0
 
 class nn_se_rReSpecMSE1000(BaseConfig): # done 15123
   """
@@ -662,7 +833,7 @@ class nn_se_rReSpecMSE1000(BaseConfig): # done 15123
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_AFD = 1000.0
+  relative_loss_epsilon = 1000.0
 
 class nn_se_rWavL1(p40): # done p40
   """
@@ -688,7 +859,7 @@ class nn_se_rReWavL2_AFD20(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_AFD = 20.0
+  relative_loss_epsilon = 20.0
 
 class nn_se_rReWavL2_AFD50(p40): # done p40
   """
@@ -698,7 +869,7 @@ class nn_se_rReWavL2_AFD50(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_AFD = 50.0
+  relative_loss_epsilon = 50.0
 
 class nn_se_rReWavL2_AFD100(p40): # done p40
   """
@@ -708,7 +879,7 @@ class nn_se_rReWavL2_AFD100(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_AFD = 100.0
+  relative_loss_epsilon = 100.0
 
 class nn_se_rReWavL2_AFD200(p40): # done p40
   """
@@ -718,7 +889,7 @@ class nn_se_rReWavL2_AFD200(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_AFD = 200.0
+  relative_loss_epsilon = 200.0
 
 class nn_se_rReWavL2_AFD1000(p40): # done p40
   """
@@ -728,7 +899,7 @@ class nn_se_rReWavL2_AFD1000(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_AFD = 1000.0
+  relative_loss_epsilon = 1000.0
 
 class nn_se_rSDRv1(BaseConfig): # done 15123
   """
@@ -878,7 +1049,7 @@ class nn_se_rSpecMseSDRv3_1_1(p40): # done p40
   loss_name = ["real_net_spec_mse", "real_net_sdrV3"]
   loss_weight = [1.0, 1.0]
 
-class nn_se_rMagSpecMseSDRv3_001(p40): # running p40
+class nn_se_rMagSpecMseSDRv3_001(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -887,7 +1058,7 @@ class nn_se_rMagSpecMseSDRv3_001(p40): # running p40
   loss_name = ["real_net_mag_mse", "real_net_spec_mse", "real_net_sdrV3"]
   loss_weight = [1.0, 1.0, 1.0]
 
-class nn_se_rMagMseSDRv3_001(p40): # running p40
+class nn_se_rMagMseSDRv3_001(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -896,7 +1067,7 @@ class nn_se_rMagMseSDRv3_001(p40): # running p40
   loss_name = ["real_net_mag_mse", "real_net_sdrV3"]
   loss_weight = [1.0, 1.0]
 
-class nn_se_rMagSpecMse_001(p40): # running p40
+class nn_se_rMagSpecMse_001(p40): # done p40
   """
   cnn1blstm1lstm
   """
@@ -990,6 +1161,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rSpecMSE_D_GRL_007
+PARAM = nn_se_rSpecMSE_DCT
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train
