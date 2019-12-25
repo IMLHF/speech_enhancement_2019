@@ -94,7 +94,7 @@ def train_one_epoch(sess, train_model, train_log_file,
       tr_loss += sum_loss_stopCriterion
       i += 1
       print("\r", end="")
-      print("train: %d/%d, cost %.2fs, stop_loss %.2f, single_losses %s #(a %.4f b %.4f c %.4f)"
+      print("train: %d/%d, cost %.2fs, stop_loss %.2f, single_losses %s #(a %.4f b %.4f c %.2e)"
             "      " % (
                 i, total_i, time.time()-one_batch_time, sum_loss_stopCriterion,
                 str(runOut_show_losses), a, b, c
@@ -103,7 +103,7 @@ def train_one_epoch(sess, train_model, train_log_file,
       one_batch_time = time.time()
       if i % PARAM.batches_to_logging == 0:
         print("\r", end="")
-        msg = "     Minbatch %04d: stop_loss:%.4f, losses:%s, lr:%.2e, time:%ds. #(a %.4f b %.4f c %.4f)          \n" % (
+        msg = "     Minbatch %04d: stop_loss:%.4f, losses:%s, lr:%.2e, time:%ds. #(a %.4f b %.4f c %.2e)          \n" % (
                 i, tr_loss/i, round_lists(list(total_show_losses_vec / i), 4), lr, time.time()-minbatch_time, a,b,c
               )
         minbatch_time = time.time()
