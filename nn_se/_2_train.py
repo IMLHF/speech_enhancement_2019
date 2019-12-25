@@ -228,7 +228,7 @@ def main():
   with g.as_default():
     with tf.name_scope("inputs"):
       train_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.train_name)
-      val_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.validation_name)
+      val_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.validation_name, False)
 
     ModelC, VariablesC = model_builder.get_model_class_and_var()
 
@@ -335,6 +335,7 @@ def main():
                                        avg_show_losses=evalOutputs_prev.avg_show_losses,
                                        cost_time=evalOutputs_prev.cost_time)
         stop_criterion_losses = ["real_net_spec_mse", "deep_features_loss"]
+        train_model.assign_step(sess, 1)
       else:
         break
 

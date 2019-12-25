@@ -38,7 +38,6 @@ class BaseConfig(StaticKey):
 
   n_processor_gen_tfrecords = 16
   tfrecords_num_pre_set = 160
-  shuffle_records = True
   batch_size = 64
   n_processor_tfdata = 4
 
@@ -116,9 +115,11 @@ class BaseConfig(StaticKey):
   # just for "DISCRIMINATOR_AD_MODEL"
   add_logFilter_in_Discrimitor = False # add log Value Filter to features of Discriminator.
   add_logFilter_in_SE_Loss = False # add log Value Filter to SE loss. Log Filter params have no grad.
+  LogFilter_type = 1 # 1:a=0.1,b=1.0,c=0.001; 2:a=0.4,b=1.0,c=0.001
   f_log_a = 0.1
   f_log_b = 1.0
-  f_log_c = 0.0
+  f_log_c = 0.001
+  log_filter_eps = 1e-6
   f_log_var_trainable = True
 
 
@@ -198,7 +199,7 @@ class nn_se_rSpecMSE(p40): # done p40
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rSpecMSE_fixISTFTWindow(BaseConfig): # running 15123
+class nn_se_rSpecMSE_fixISTFTWindow(BaseConfig): # done 15123
   """
   cnn1blstm1lstm
   """
@@ -206,7 +207,7 @@ class nn_se_rSpecMSE_fixISTFTWindow(BaseConfig): # running 15123
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rSpecMSE_DCT(BaseConfig): # running 15123
+class nn_se_rSpecMSE_DCT(p40): # running p40
   """
   cnn1blstm1lstm DCT features
   """
@@ -1136,7 +1137,6 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   """
   cnn1blstm1lstm
   short time wav as feature
-
   """
   blstm_layers = 1
   lstm_layers = 1
@@ -1148,7 +1148,7 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-class nn_se_rMagMSE_AD_LogFilterLoss(BaseConfig): # running 15043
+class nn_se_rMagMSE_AD_LogFilterLoss001(BaseConfig): # running 15041
   '''
   half full vec constrained
   '''
@@ -1161,9 +1161,29 @@ class nn_se_rMagMSE_AD_LogFilterLoss(BaseConfig): # running 15043
   discirminator_grad_coef = 1.0
   add_logFilter_in_Discrimitor = True
   add_logFilter_in_SE_Loss = True
+  LogFilter_type = 1
   stop_criterion_losses = ["real_net_spec_mse"]
   show_losses = ["real_net_mag_mse", "d_loss"]
 
-PARAM = nn_se_rMagMSE_AD_LogFilterLoss
+class nn_se_rMagMSE_AD_LogFilterLoss002(BaseConfig): # pendding 15041
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_mag_mse"]
+  GPU_PARTION = 0.90
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  add_logFilter_in_Discrimitor = True
+  add_logFilter_in_SE_Loss = True
+  LogFilter_type = 2
+  f_log_a = 0.4
+  log_filter_eps = 1e-12
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_mag_mse", "d_loss"]
+
+PARAM = nn_se_rSpecMSE_DCT
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

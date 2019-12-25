@@ -23,16 +23,16 @@ def parse_func(record_proto):
   return record['clean'], record['mixed']
 
 
-def get_batch_inputs_from_dataset(sub_dataset_name):
+def get_batch_inputs_from_dataset(sub_dataset_name, shuffle_records=True):
   """
   dataset_name: PARAM.train_name, PARAM.val_name, PARAM.test_name
   """
   tfrecords_list = misc_utils.datasets_dir().joinpath(sub_dataset_name, "tfrecords", "*.tfrecords")
   files = tf.data.Dataset.list_files(str(tfrecords_list))
   # files = files.take(FLAGS.PARAM.MAX_TFRECORD_FILES_USED)
-  if PARAM.shuffle_records:
+  if shuffle_records:
     files = files.shuffle(PARAM.tfrecords_num_pre_set)
-  if not PARAM.shuffle_records:
+  if not shuffle_records:
     dataset = files.interleave(tf.data.TFRecordDataset,
                                cycle_length=1,
                                block_length=PARAM.batch_size,
@@ -44,7 +44,7 @@ def get_batch_inputs_from_dataset(sub_dataset_name):
                                block_length=PARAM.batch_size//8,
                                num_parallel_calls=PARAM.n_processor_tfdata,
                                )
-  if PARAM.shuffle_records:
+  if shuffle_records:
     dataset = dataset.shuffle(PARAM.batch_size*10)
 
   dataset = dataset.map(parse_func, num_parallel_calls=PARAM.n_processor_tfdata)
