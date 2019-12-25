@@ -114,8 +114,12 @@ class BaseConfig(StaticKey):
   feature_type = "DFT" # DFT | DCT | QCT
 
   # just for "DISCRIMINATOR_AD_MODEL"
-  add_logFilter_in_Discrimitor = False # add log Value Filter to features of Discrimintor.
+  add_logFilter_in_Discrimitor = False # add log Value Filter to features of Discriminator.
   add_logFilter_in_SE_Loss = False # add log Value Filter to SE loss. Log Filter params have no grad.
+  f_log_a = 0.1
+  f_log_b = 1.0
+  f_log_c = 0.0
+  f_log_var_trainable = True
 
 
 class p40(BaseConfig):
@@ -1144,6 +1148,22 @@ class nn_se_rSTWavMSE512Map(p40): # done p40
   net_out_mask = False
   GPU_PARTION = 0.3
 
-PARAM = nn_se_rSpecMSE_DCT
+class nn_se_rMagMSE_AD_LogFilterLoss(BaseConfig): # running 15043
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_mag_mse"]
+  GPU_PARTION = 0.95
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  add_logFilter_in_Discrimitor = True
+  add_logFilter_in_SE_Loss = True
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_mag_mse", "d_loss"]
+
+PARAM = nn_se_rMagMSE_AD_LogFilterLoss
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

@@ -223,13 +223,6 @@ class Module(object):
     forward_outputs = self.forward(mixed_wav_batch)
     self._est_clean_wav_batch = forward_outputs[-1]
 
-    trainable_variables = tf.compat.v1.trainable_variables()
-    self.save_variables.extend([var for var in trainable_variables])
-    self.saver = tf.compat.v1.train.Saver(self.save_variables, max_to_keep=PARAM.max_keep_ckpt, save_relative_paths=True)
-
-    if mode == PARAM.MODEL_INFER_KEY:
-      return
-
     # labels
     self.clean_wav_batch = clean_wav_batch
     self.clean_spec_batch = misc_utils.tf_batch_stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
@@ -255,7 +248,11 @@ class Module(object):
 
     self._loss = self._se_loss + self._d_loss
 
-    if mode == PARAM.MODEL_VALIDATE_KEY:
+    trainable_variables = tf.compat.v1.trainable_variables()
+    self.save_variables.extend([var for var in trainable_variables])
+    self.saver = tf.compat.v1.train.Saver(self.save_variables, max_to_keep=PARAM.max_keep_ckpt, save_relative_paths=True)
+
+    if mode == PARAM.MODEL_VALIDATE_KEY or mode == PARAM.MODEL_INFER_KEY:
       return
 
     # optimizer
@@ -288,7 +285,6 @@ class Module(object):
                                            global_step=self.global_step)
     elif PARAM.model_name == "DISCRIMINATOR_AD_MODEL": # if use D as deep_feature_loss then stop train D
       d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
-      self.save_variables.extend([var for var in d_params])
       # misc_utils.show_variables(d_params)
       se_gradients = tf.gradients(
           self._d_loss,
@@ -529,7 +525,7 @@ class Module(object):
       a = self.variables._f_log_a
       b = self.variables._f_log_b
       c = self.variables._f_log_c
-      outputs = (tf.log(outputs) * b + c - tf.log(c))*a
+      outputs = (tf.log(outputs * b + c) - tf.log(c))*a
 
     # deep_features.append(outputs) # [batch*2, time, f]
     zeros = tf.zeros(clean_mag_batch.shape[0], dtype=tf.int32)
