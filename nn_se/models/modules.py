@@ -69,6 +69,17 @@ class RealVariables(object):
       self._lr = tf.compat.v1.get_variable('lr', dtype=tf.float32, trainable=False,
                                            initializer=tf.constant(PARAM.learning_rate))
 
+    # linear_coef and log_bias in log features # f = a*[log(bx+c)-log(c)], (a,b,c>0), init:a=0.1,b=1.0,c=1e-6
+    self._f_log_a_var = tf.compat.v1.get_variable('discriminator/f_log_a', dtype=tf.float32,
+                                                  initializer=tf.constant(PARAM.f_log_a), trainable=PARAM.f_log_var_trainable)
+    self._f_log_b_var = tf.compat.v1.get_variable('discriminator/f_log_b', dtype=tf.float32,
+                                                  initializer=tf.constant(PARAM.f_log_b), trainable=PARAM.f_log_var_trainable)
+    self._f_log_c_var = tf.compat.v1.get_variable('discriminator/f_log_c', dtype=tf.float32,
+                                                  initializer=tf.constant(PARAM.f_log_c), trainable=PARAM.f_log_var_trainable)
+    self._f_log_a = 1e-6 + tf.nn.relu(self._f_log_a_var)
+    self._f_log_b = 1e-6 + tf.nn.relu(self._f_log_b_var)
+    self._f_log_c = 1e-6 + tf.nn.relu(self._f_log_c_var)
+
     # CNN
     self.conv2d_layers = []
     if PARAM.no_cnn:
@@ -412,9 +423,9 @@ class Module(object):
     mask = self.CNN_RNN_FC(mixed_mag_batch, training)
 
     if PARAM.net_out_mask:
-      est_clean_mag_batch = tf.multiply(mask, mixed_mag_batch) # mag estimated
+      est_clean_mag_batch = tf.nn.relu(tf.multiply(mask, mixed_mag_batch)) # mag estimated
     else:
-      est_clean_mag_batch = mask
+      est_clean_mag_batch = tf.nn.relu(mask)
 
     if PARAM.use_wav_as_feature:
       est_clean_spec_batch = est_clean_mag_batch
@@ -514,6 +525,12 @@ class Module(object):
     deep_features = []
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
     outputs = tf.concat([clean_mag_batch, est_mag_batch], axis=0)
+    if PARAM.add_logFilter_in_Discrimitor:
+      a = self.variables._f_log_a
+      b = self.variables._f_log_b
+      c = self.variables._f_log_c
+      outputs = (tf.log(outputs) * b + c - tf.log(c))*a
+
     # deep_features.append(outputs) # [batch*2, time, f]
     zeros = tf.zeros(clean_mag_batch.shape[0], dtype=tf.int32)
     ones = tf.ones(est_mag_batch.shape[0], dtype=tf.int32)

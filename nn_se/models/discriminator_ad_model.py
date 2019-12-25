@@ -55,14 +55,22 @@ class DISCRIMINATOR_AD_MODEL(Module):
     return loss, deep_features_losses
 
   def get_loss(self, forward_outputs):
+    clean_mag_batch_label = self.clean_mag_batch
     r_est_clean_mag_batch, r_est_clean_spec_batch, r_est_clean_wav_batch = forward_outputs
+
+    if PARAM.add_logFilter_in_SE_Loss:
+      a = self.variables._f_log_a
+      b = self.variables._f_log_b
+      c = self.variables._f_log_c
+      clean_mag_batch_label = (tf.log(clean_mag_batch_label * b + c) - tf.log(c))*a
+      r_est_clean_mag_batch = (tf.log(r_est_clean_mag_batch * b + c) - tf.log(c))*a
 
     # region real net losses
     ## frequency domain loss
-    self.real_net_mag_mse = losses.batch_time_fea_real_mse(r_est_clean_mag_batch, self.clean_mag_batch)
-    self.real_net_reMagMse = losses.batch_real_relativeMSE(r_est_clean_mag_batch, self.clean_mag_batch, PARAM.relative_loss_AFD)
+    self.real_net_mag_mse = losses.batch_time_fea_real_mse(r_est_clean_mag_batch, clean_mag_batch_label)
+    self.real_net_reMagMse = losses.batch_real_relativeMSE(r_est_clean_mag_batch, clean_mag_batch_label, PARAM.relative_loss_epsilon)
     self.real_net_spec_mse = losses.batch_time_fea_complex_mse(r_est_clean_spec_batch, self.clean_spec_batch)
-    self.real_net_reSpecMse = losses.batch_complex_relativeMSE(r_est_clean_spec_batch, self.clean_spec_batch, PARAM.relative_loss_AFD)
+    self.real_net_reSpecMse = losses.batch_complex_relativeMSE(r_est_clean_spec_batch, self.clean_spec_batch, PARAM.relative_loss_epsilon)
     self.real_net_specTCosSimV1 = losses.batch_complexspec_timeaxis_cos_sim_V1(r_est_clean_spec_batch, self.clean_spec_batch) # *0.167
     self.real_net_specFCosSimV1 = losses.batch_complexspec_frequencyaxis_cos_sim_V1(r_est_clean_spec_batch, self.clean_spec_batch) # *0.167
     self.real_net_specTFCosSimV1 = losses.batch_complexspec_TF_cos_sim_V1(r_est_clean_spec_batch, self.clean_spec_batch) # *0.167
@@ -70,7 +78,7 @@ class DISCRIMINATOR_AD_MODEL(Module):
     ## time domain loss
     self.real_net_wav_L1 = losses.batch_wav_L1_loss(r_est_clean_wav_batch, self.clean_wav_batch)*10.0
     self.real_net_wav_L2 = losses.batch_wav_L2_loss(r_est_clean_wav_batch, self.clean_wav_batch)*100.0
-    self.real_net_reWavL2 = losses.batch_wav_relativeMSE(r_est_clean_wav_batch, self.clean_wav_batch, PARAM.relative_loss_AFD)
+    self.real_net_reWavL2 = losses.batch_wav_relativeMSE(r_est_clean_wav_batch, self.clean_wav_batch, PARAM.relative_loss_epsilon)
     self.real_net_sdrV1 = losses.batch_sdrV1_loss(r_est_clean_wav_batch, self.clean_wav_batch)
     self.real_net_sdrV2 = losses.batch_sdrV2_loss(r_est_clean_wav_batch, self.clean_wav_batch)
     self.real_net_sdrV3 = losses.batch_sdrV3_loss(r_est_clean_wav_batch, self.clean_wav_batch, PARAM.sdrv3_bias) # *0.167
