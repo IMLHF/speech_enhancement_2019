@@ -218,7 +218,6 @@ class Module(object):
     if PARAM.use_lr_warmup:
       self._lr = misc_utils.noam_scheme(self._lr, self.global_step, warmup_steps=PARAM.warmup_steps)
 
-
     # nn forward
     forward_outputs = self.forward(mixed_wav_batch)
     self._est_clean_wav_batch = forward_outputs[-1]
