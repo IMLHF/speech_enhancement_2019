@@ -734,7 +734,7 @@ class nn_se_rReMagMSE20(p40): # runnnig p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_epsilon = 20.0
+  relative_loss_epsilon = 1.0/20.0
 
 class nn_se_rReMagMSE50(p40): # done p40
   """
@@ -743,7 +743,7 @@ class nn_se_rReMagMSE50(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_epsilon = 50.0
+  relative_loss_epsilon = 1.0/50.0
 
 class nn_se_rReMagMSE100(p40): # done p40
   """
@@ -752,7 +752,7 @@ class nn_se_rReMagMSE100(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_epsilon = 100.0
+  relative_loss_epsilon = 1.0/100.0
 
 class nn_se_rReMagMSE200(p40): # done p40
   """
@@ -761,7 +761,7 @@ class nn_se_rReMagMSE200(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_epsilon = 200.0
+  relative_loss_epsilon = 1.0/200.0
 
 class nn_se_rReMagMSE500(p40): # done p40
   """
@@ -770,7 +770,7 @@ class nn_se_rReMagMSE500(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_epsilon = 500.0
+  relative_loss_epsilon = 1.0/500.0
 
 class nn_se_rReMagMSE1000(p40): # done p40
   """
@@ -779,7 +779,7 @@ class nn_se_rReMagMSE1000(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reMagMse"]
-  relative_loss_epsilon = 1000.0
+  relative_loss_epsilon = 1.0/1000.0
 
 class nn_se_rReSpecMSE20(p40): # done p40
   """
@@ -788,7 +788,7 @@ class nn_se_rReSpecMSE20(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_epsilon = 20.0
+  relative_loss_epsilon = 1.0/20.0
 
 class nn_se_rReSpecMSE50(p40): # done p40
   """
@@ -797,7 +797,7 @@ class nn_se_rReSpecMSE50(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_epsilon = 50.0
+  relative_loss_epsilon = 1.0/50.0
 
 class nn_se_rReSpecMSE100(p40): # done p40
   """
@@ -806,7 +806,7 @@ class nn_se_rReSpecMSE100(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_epsilon = 100.0
+  relative_loss_epsilon = 1.0/100.0
 
 class nn_se_rReSpecMSE200(p40): # done p40
   """
@@ -815,7 +815,7 @@ class nn_se_rReSpecMSE200(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_epsilon = 200.0
+  relative_loss_epsilon = 1.0/200.0
 
 class nn_se_rReSpecMSE500(p40): # done p40
   """
@@ -824,7 +824,7 @@ class nn_se_rReSpecMSE500(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_epsilon = 500.0
+  relative_loss_epsilon = 1.0/500.0
 
 class nn_se_rReSpecMSE1000(BaseConfig): # done 15123
   """
@@ -833,7 +833,7 @@ class nn_se_rReSpecMSE1000(BaseConfig): # done 15123
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reSpecMse"]
-  relative_loss_epsilon = 1000.0
+  relative_loss_epsilon = 1.0/1000.0
 
 class nn_se_rWavL1(p40): # done p40
   """
@@ -859,7 +859,7 @@ class nn_se_rReWavL2_AFD20(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_epsilon = 20.0
+  relative_loss_epsilon = 1.0/20.0
 
 class nn_se_rReWavL2_AFD50(p40): # done p40
   """
@@ -869,7 +869,7 @@ class nn_se_rReWavL2_AFD50(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_epsilon = 50.0
+  relative_loss_epsilon = 1.0/50.0
 
 class nn_se_rReWavL2_AFD100(p40): # done p40
   """
@@ -879,7 +879,7 @@ class nn_se_rReWavL2_AFD100(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_epsilon = 100.0
+  relative_loss_epsilon = 1.0/100.0
 
 class nn_se_rReWavL2_AFD200(p40): # done p40
   """
@@ -889,7 +889,7 @@ class nn_se_rReWavL2_AFD200(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_epsilon = 200.0
+  relative_loss_epsilon = 1.0/200.0
 
 class nn_se_rReWavL2_AFD1000(p40): # done p40
   """
@@ -899,7 +899,7 @@ class nn_se_rReWavL2_AFD1000(p40): # done p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_reWavL2"]
-  relative_loss_epsilon = 1000.0
+  relative_loss_epsilon = 1.0/1000.0
 
 class nn_se_rSDRv1(BaseConfig): # done 15123
   """
