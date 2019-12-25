@@ -170,10 +170,16 @@ def eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses):
   for l_name in stop_criterion_losses:
     losses_to_run.append(all_losses[l_name])
 
+  # losses_to_run.append(val_model.clean_mag_batch)
+
   total_show_losses_vec = None
   while True:
     try:
       run_out_losses = sess.run(losses_to_run)
+
+      # debug_mag = run_out_losses[-1]
+      # run_out_losses = run_out_losses[:-1]
+
       runOut_show_losses = run_out_losses[:len(show_losses)]
       runOut_show_losses = round_lists(runOut_show_losses, 4)
       runOut_show_losses_vec = np.array(unfold_list(runOut_show_losses))
@@ -184,7 +190,7 @@ def eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses):
       runOut_losses_stopCriterion = run_out_losses[-len(stop_criterion_losses):]
       sum_loss_stopCriterion = np.sum(runOut_losses_stopCriterion)
       # print("\n", loss, real_net_mag_mse, real_net_spec_mse, real_net_wavL1, real_net_wavL2, flush=True)
-      # print(np.mean(debug_mag), np.var(debug_mag), np.min(debug_mag), np.max(debug_mag), loss, flush=True)
+      # print(np.mean(debug_mag), np.std(debug_mag), np.min(debug_mag), np.max(debug_mag), flush=True)
       total_loss += sum_loss_stopCriterion
       i += 1
       print("\r", end="")
