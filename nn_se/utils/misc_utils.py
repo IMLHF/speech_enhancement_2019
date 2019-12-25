@@ -19,7 +19,8 @@ def tf_batch_stft(batch_wav, frame_length, frame_step):
     frames = tf.signal.frame(batch_wav, frame_length, frame_step, pad_end=True) # [batch,time,f]
     hann_win = tf.reshape(tf.signal.hann_window(frame_length), [1,1,-1])
     frames = frames*hann_win
-    feature = tf.signal.dct(frames)
+    feature = tf.signal.dct(frames, norm='ortho')
+    feature = feature * 10.0
   return feature
 
 
@@ -29,11 +30,13 @@ def tf_batch_istft(batch_stft, frame_length, frame_step):
     return feature
   if PARAM.feature_type == "DFT":
     signals = tf.signal.inverse_stft(batch_stft, frame_length, frame_step,
-                                     window_fn=tf.signal.inverse_stft_window_fn(frame_step))
+                                     # window_fn=tf.signal.inverse_stft_window_fn(frame_step)
+                                     )
   elif PARAM.feature_type == "DCT":
     # hann_win = tf.reshape(tf.signal.hann_window(frame_length), [1,1,-1])
     # frames = frames*hann_win
-    itrans = tf.signal.idct(batch_stft)
+    batch_stft = batch_stft / 10.0
+    itrans = tf.signal.idct(batch_stft, norm='ortho')
     signals = tf.signal.overlap_and_add(itrans, frame_step)
   return signals
 
