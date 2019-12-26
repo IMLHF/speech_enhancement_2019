@@ -227,6 +227,8 @@ class Module(object):
     self._est_clean_wav_batch = forward_outputs[-1]
 
     # labels
+    if mode == PARAM.MODEL_INFER_KEY:
+      clean_wav_batch = tf.ones_like(mixed_wav_batch)
     self.clean_wav_batch = clean_wav_batch
     self.clean_spec_batch = misc_utils.tf_batch_stft(clean_wav_batch, PARAM.frame_length, PARAM.frame_step) # complex label
     # self.noise_wav_batch = mixed_wav_batch - clean_wav_batch
