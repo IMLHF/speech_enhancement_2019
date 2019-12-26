@@ -76,9 +76,9 @@ class RealVariables(object):
                                                   initializer=tf.constant(PARAM.f_log_b), trainable=PARAM.f_log_var_trainable)
     self._f_log_c_var = tf.compat.v1.get_variable('LogFilter/f_log_c', dtype=tf.float32,
                                                   initializer=tf.constant(PARAM.f_log_c), trainable=PARAM.f_log_var_trainable)
-    self._f_log_a = PARAM.log_filter_eps + tf.nn.relu(self._f_log_a_var)
-    self._f_log_b = PARAM.log_filter_eps + tf.nn.relu(self._f_log_b_var)
-    self._f_log_c = PARAM.log_filter_eps + tf.nn.relu(self._f_log_c_var)
+    self._f_log_a = PARAM.log_filter_eps_a_b + tf.nn.relu(self._f_log_a_var)
+    self._f_log_b = PARAM.log_filter_eps_a_b + tf.nn.relu(self._f_log_b_var)
+    self._f_log_c = PARAM.log_filter_eps_c + tf.nn.relu(self._f_log_c_var)
 
     # CNN
     self.conv2d_layers = []

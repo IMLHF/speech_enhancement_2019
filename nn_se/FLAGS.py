@@ -119,7 +119,8 @@ class BaseConfig(StaticKey):
   f_log_a = 0.1
   f_log_b = 1.0
   f_log_c = 0.001
-  log_filter_eps = 1e-6
+  log_filter_eps_a_b = 1e-6
+  log_filter_eps_c = 1e-6
   f_log_var_trainable = True
 
 
@@ -399,7 +400,7 @@ class nn_se_rSpecMSE_D_GRL_007T1_DFL(p40): # running p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
-  GPU_PARTION = 0.3
+  GPU_PARTION = 0.47
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.0
   use_deep_feature_loss = True
@@ -416,7 +417,7 @@ class nn_se_rSpecMSE_D_GRL_007T1_softDFL(p40): # running p40
   blstm_layers = 1
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
-  GPU_PARTION = 0.3
+  GPU_PARTION = 0.47
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.0
   use_deep_feature_loss = True
@@ -1165,7 +1166,7 @@ class nn_se_rMagMSE_AD_LogFilterLoss001(BaseConfig): # running 15041
   stop_criterion_losses = ["real_net_spec_mse"]
   show_losses = ["real_net_mag_mse", "d_loss"]
 
-class nn_se_rMagMSE_AD_LogFilterLoss002(BaseConfig): # pendding 15041
+class nn_se_rMagMSE_AD_LogFilterLoss002(BaseConfig): # running 15043
   '''
   half full vec constrained
   '''
@@ -1180,10 +1181,27 @@ class nn_se_rMagMSE_AD_LogFilterLoss002(BaseConfig): # pendding 15041
   add_logFilter_in_SE_Loss = True
   LogFilter_type = 2
   f_log_a = 0.4
-  log_filter_eps = 1e-12
+  log_filter_eps_c = 0.001
   stop_criterion_losses = ["real_net_spec_mse"]
   show_losses = ["real_net_mag_mse", "d_loss"]
 
-PARAM = nn_se_rSpecMSE_DCT
+class nn_se_rMagMSE_AD_LogFilterLoss003(p40): # running p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_mag_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  add_logFilter_in_Discrimitor = True
+  add_logFilter_in_SE_Loss = True
+  LogFilter_type = 3
+  log_filter_eps_c = 1e-12
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_mag_mse", "d_loss"]
 
+PARAM = nn_se_rSpecMSE_D_GRL_007T1_softDFL
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train
