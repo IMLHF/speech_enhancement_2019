@@ -67,18 +67,20 @@ def train_one_epoch(sess, train_model, train_log_file,
     losses_to_run.append(all_losses[l_name])
 
   # debug
-  losses_to_run.extend([
-      train_model.variables._f_log_a,
-      train_model.variables._f_log_b,
-      train_model.variables._f_log_c,
-  ])
+  if PARAM.add_logFilter_in_Discrimitor or PARAM.add_logFilter_in_SE_Loss:
+    losses_to_run.extend([
+        train_model.variables._f_log_a,
+        train_model.variables._f_log_b,
+        train_model.variables._f_log_c,
+    ])
 
   while True:
     try:
       run_out_losses = sess.run(losses_to_run)
 
-      a,b,c = run_out_losses[-3:] # debug
-      run_out_losses = run_out_losses[:-3]
+      if PARAM.add_logFilter_in_Discrimitor or PARAM.add_logFilter_in_SE_Loss:
+        a,b,c = run_out_losses[-3:] # debug
+        run_out_losses = run_out_losses[:-3]
 
       _, lr, global_step = run_out_losses[:3]
       runOut_show_losses = run_out_losses[3:len(show_losses)+3]
@@ -94,17 +96,18 @@ def train_one_epoch(sess, train_model, train_log_file,
       tr_loss += sum_loss_stopCriterion
       i += 1
       print("\r", end="")
-      print("train: %d/%d, cost %.2fs, stop_loss %.2f, single_losses %s #(a %.4f b %.4f c %.2e)"
+      abc = "#(a %.4f b %.4f c %.2e)" % (a,b,c) if PARAM.add_logFilter_in_Discrimitor or PARAM.add_logFilter_in_SE_Loss else ""
+      print("train: %d/%d, cost %.2fs, stop_loss %.2f, single_losses %s %s"
             "      " % (
                 i, total_i, time.time()-one_batch_time, sum_loss_stopCriterion,
-                str(runOut_show_losses), a, b, c
+                str(runOut_show_losses), abc
             ),
             flush=True, end="")
       one_batch_time = time.time()
       if i % PARAM.batches_to_logging == 0:
         print("\r", end="")
-        msg = "     Minbatch %04d: stop_loss:%.4f, losses:%s, lr:%.2e, time:%ds. #(a %.4f b %.4f c %.2e)          \n" % (
-                i, tr_loss/i, round_lists(list(total_show_losses_vec / i), 4), lr, time.time()-minbatch_time, a,b,c
+        msg = "     Minbatch %04d: stop_loss:%.4f, losses:%s, lr:%.2e, time:%ds. %s          \n" % (
+                i, tr_loss/i, round_lists(list(total_show_losses_vec / i), 4), lr, time.time()-minbatch_time, abc
               )
         minbatch_time = time.time()
         misc_utils.print_log(msg, train_log_file)
