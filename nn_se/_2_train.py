@@ -235,10 +235,7 @@ def main():
     ModelC, VariablesC = model_builder.get_model_class_and_var()
 
     variables = VariablesC()
-    train_model_raw = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
-    train_model_df = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean,
-                            use_deep_feature_loss=True)
-    train_model = train_model_raw
+    train_model = ModelC(PARAM.MODEL_TRAIN_KEY, variables, train_inputs.mixed, train_inputs.clean)
     # tf.compat.v1.get_variable_scope().reuse_variables()
     val_model = ModelC(PARAM.MODEL_VALIDATE_KEY, variables, val_inputs.mixed,val_inputs.clean)
     init = tf.group(tf.compat.v1.global_variables_initializer(),
@@ -274,7 +271,6 @@ def main():
   assert PARAM.s_epoch > 0, 'start epoch > 0 is required.'
   model_abandon_time = 0
 
-  deep_feature_loss_start = False
   for epoch in range(PARAM.s_epoch, PARAM.max_epoch+1):
     misc_utils.print_log("\n\n", train_log_file, no_time=True)
     misc_utils.print_log("  Epoch %03d:\n" % epoch, train_log_file)
@@ -330,17 +326,7 @@ def main():
       msg = "finished, too small learning rate %e.\n" % trainOutputs.lr
       tf.logging.info(msg)
       misc_utils.print_log(msg, train_log_file)
-      if PARAM.use_deep_feature_loss and (not deep_feature_loss_start):
-        model_abandon_time = 0
-        deep_feature_loss_start = True
-        train_model = train_model_df
-        evalOutputs_prev = EvalOutputs(avg_loss=99999.0,
-                                       avg_show_losses=evalOutputs_prev.avg_show_losses,
-                                       cost_time=evalOutputs_prev.cost_time)
-        stop_criterion_losses = ["real_net_spec_mse", "deep_features_loss"]
-        train_model.assign_step(sess, 1)
-      else:
-        break
+      break
 
   sess.close()
   misc_utils.print_log("\n", train_log_file, no_time=True)

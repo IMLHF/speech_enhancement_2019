@@ -197,8 +197,7 @@ class Module(object):
                variables: Union[RealVariables, ComplexVariables],
                mixed_wav_batch,
                clean_wav_batch=None,
-               noise_wav_batch=None,
-               use_deep_feature_loss=False):
+               noise_wav_batch=None):
     del noise_wav_batch
     self.mixed_wav_batch = mixed_wav_batch
 
@@ -250,19 +249,16 @@ class Module(object):
       self._d_loss, self._deep_features_losses = self.get_discriminator_loss(forward_outputs)
       for l in self._deep_features_losses:
         self._deep_features_loss += l
-      # if use_deep_feature_loss:
-      #   print('used_deepfeatureloss')
-      #   self._d_loss = tf.stop_gradient(self._d_loss) + 200.0
 
     self._loss = self._se_loss + self._d_loss
 
     # trainable_variables = tf.compat.v1.trainable_variables()
-    d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
+    self.d_params = tf.compat.v1.trainable_variables(scope='discriminator*')
     if PARAM.add_logFilter_in_Discrimitor:
-      d_params.extend(tf.compat.v1.trainable_variables(scope='LogFilter*'))
+      self.d_params.extend(tf.compat.v1.trainable_variables(scope='LogFilter*'))
       # misc_utils.show_variables(d_params)
-    se_net_params = tf.compat.v1.trainable_variables(scope='se_net*')
-    self.save_variables.extend(se_net_params + d_params)
+    self.se_net_params = tf.compat.v1.trainable_variables(scope='se_net*')
+    self.save_variables.extend(self.se_net_params + self.d_params)
     self.saver = tf.compat.v1.train.Saver(self.save_variables,
                                           max_to_keep=PARAM.max_keep_ckpt,
                                           save_relative_paths=True)
@@ -272,113 +268,17 @@ class Module(object):
 
     # optimizer
     # opt = tf.keras.optimizers.Adam(learning_rate=self._lr)
-    opt = tf.compat.v1.train.AdamOptimizer(self._lr)
+    self.optimizer = tf.compat.v1.train.AdamOptimizer(self._lr)
     # misc_utils.show_variables(se_net_params)
     gradients = tf.gradients(
       self._se_loss,
-      se_net_params,
+      self.se_net_params,
       colocate_gradients_with_ops=True
     )
-    clipped_gradients, gradient_norm = tf.clip_by_global_norm(
+    self.se_loss_grads, gradient_norm = tf.clip_by_global_norm(
         gradients, PARAM.max_gradient_norm)
-    self._train_op = opt.apply_gradients(zip(clipped_gradients, se_net_params),
-                                         global_step=self.global_step)
-
-
-    ## deep features loss grads
-    if use_deep_feature_loss:
-      deep_f_loss_grad = tf.gradients(
-        self._deep_features_loss,
-        se_net_params,
-        colocate_gradients_with_ops=True
-      )
-      deep_f_loss_grad, deep_f_gra_norm = tf.clip_by_global_norm(
-          deep_f_loss_grad, PARAM.max_gradient_norm)
-      clipped_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, deep_f_loss_grad)]
-      self._train_op = opt.apply_gradients(zip(clipped_gradients, se_net_params),
-                                           global_step=self.global_step)
-      # print("use deep features loss", flush=True)
-    elif PARAM.model_name == "DISCRIMINATOR_AD_MODEL": # if use D as deep_feature_loss then stop train D
-      se_gradients = tf.gradients(
-          self._d_loss,
-          se_net_params,
-          colocate_gradients_with_ops=True
-      )
-      clipped_se_gradients, _ = tf.clip_by_global_norm(
-        se_gradients, PARAM.max_gradient_norm)
-      # ifD_passGrad_to_SE = tf.cast(tf.bitwise.bitwise_and(self.global_step//2250, 1), tf.float32) # Alternate Training for GANs
-      ifD_passGrad_to_SE = 1.0
-      clipped_se_gradients = [grad*PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE for grad in clipped_se_gradients]
-      if PARAM.D_GRL:
-        clipped_se_gradients = [-grad for grad in clipped_se_gradients] # GRL
-      # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-      #   print(grad1.shape.as_list(), grad2.shape.as_list())
-      #   print('233', tf.reduce_sum(grad1*grad2,-1).shape.as_list(), tf.reduce_sum(grad1*grad1,-1).shape.as_list())
-      if PARAM.D_Grad_DCC: # Direction Consistent Constraints
-        ## D_GRL_005
-        # clipped_se_gradients = [
-        #     tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.reduce_sum(grad1*grad1, -1)), -1)*grad1 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)]
-
-        ## D_GRL_006
-        # constrainted_se_grads_fromD = []
-        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-        #   w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
-        #   constrainted_grad2 = w_of_grad2 * grad2
-        #   constrainted_se_grads_fromD.append(constrainted_grad2)
-        # clipped_se_gradients = constrainted_se_grads_fromD
-
-        ## D_GRL_007
-        constrainted_se_grads_fromD = []
-        for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-          grad_shape = grad1.shape.as_list()
-          vec1 = tf.reshape(grad1,[-1])
-          vec2 = tf.reshape(grad2,[-1])
-          prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
-          constrainted_grad2 = tf.reshape(prj_on_vec1, grad_shape)
-          constrainted_se_grads_fromD.append(constrainted_grad2)
-        clipped_se_gradients = constrainted_se_grads_fromD
-
-        ## D_GRL_008
-        # shape_list = []
-        # split_sizes = []
-        # vec1 = tf.constant([])
-        # vec2 = tf.constant([])
-        # constrainted_se_grads_fromD = []
-        # for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients):
-        #   grad_shape = grad1.shape.as_list()
-        #   shape_list.append(grad_shape)
-        #   vec1_t = tf.reshape(grad1,[-1])
-        #   vec2_t = tf.reshape(grad2,[-1])
-        #   vec_len = vec1_t.shape.as_list()[0]
-        #   split_sizes.append(vec_len)
-        #   vec1 = tf.concat([vec1, vec1_t], 0)
-        #   vec2 = tf.concat([vec2, vec2_t], 0)
-        # prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
-        # # print(len(shape_list), flush=True)
-        # constrainted_se_grads_fromD = tf.split(prj_on_vec1, split_sizes)
-        # constrainted_se_grads_fromD = [
-        #     tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
-
-      clipped_se_gradients = [grad1+grad2 for grad1, grad2 in zip(clipped_gradients, clipped_se_gradients)] # merge se_grad from se_loss and D_loss
-      d_gradients = tf.gradients(
-          self._d_loss,
-          d_params,
-          colocate_gradients_with_ops=True
-      )
-      clipped_d_gradients, _ = tf.clip_by_global_norm(
-        d_gradients, PARAM.max_gradient_norm)
-      clipped_d_gradients = [grad*PARAM.discirminator_grad_coef for grad in clipped_d_gradients]
-
-      ## D_GRL_xxxT1
-      all_clipped_grad = clipped_se_gradients + clipped_d_gradients
-      all_params = se_net_params + d_params
-      self._train_op = opt.apply_gradients(zip(all_clipped_grad, all_params),
-                                           global_step=self.global_step)
-      # _train_op_se = opt.apply_gradients(zip(clipped_se_gradients, se_net_params),
-      #                                    global_step=self.global_step)
-      # _train_op_d = opt.apply_gradients(zip(clipped_d_gradients, d_params),
-      #                                   global_step=self.global_step)
-      # self._train_op = tf.group(_train_op_se, _train_op_d)
+    self._train_op = self.optimizer.apply_gradients(zip(self.se_loss_grads, self.se_net_params),
+                                                    global_step=self.global_step)
 
 
   def CNN_RNN_FC(self, mixed_mag_batch, training=False):

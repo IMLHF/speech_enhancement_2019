@@ -3,6 +3,7 @@ import tensorflow as tf
 from .modules import Module
 from ..FLAGS import PARAM
 from ..utils import losses
+from ..utils import misc_utils
 from .modules import RealVariables
 
 class DISCRIMINATOR_AD_MODEL(Module):
@@ -11,15 +12,123 @@ class DISCRIMINATOR_AD_MODEL(Module):
                variables: RealVariables,
                mixed_wav_batch,
                clean_wav_batch=None,
-               noise_wav_batch=None,
-               use_deep_feature_loss=False):
+               noise_wav_batch=None):
     super(DISCRIMINATOR_AD_MODEL, self).__init__(
         mode,
         variables,
         mixed_wav_batch,
         clean_wav_batch,
-        noise_wav_batch,
-        use_deep_feature_loss=use_deep_feature_loss)
+        noise_wav_batch)
+
+    if mode == PARAM.MODEL_VALIDATE_KEY or mode == PARAM.MODEL_INFER_KEY:
+      return
+
+    assert "se_loss" in PARAM.D_used_losses
+
+    ## se_loss grads
+    se_loss_grads = self.se_loss_grads
+
+    ## deep features loss grads
+    deep_f_loss_grads = tf.gradients(
+      self._deep_features_loss,
+      self.se_net_params,
+      colocate_gradients_with_ops=True
+    )
+    deep_f_loss_grads, _ = tf.clip_by_global_norm(deep_f_loss_grads, PARAM.max_gradient_norm)
+
+    ## discriminator loss grads in se_net
+    d_grads_in_seNet = tf.gradients(
+      self._d_loss,
+      self.se_net_params,
+      colocate_gradients_with_ops=True
+    )
+    d_grads_in_seNet, _ = tf.clip_by_global_norm(d_grads_in_seNet, PARAM.max_gradient_norm)
+
+    ## discriminator loss grads in D_net
+    d_grads_in_D_Net = tf.gradients(
+      self._d_loss,
+      self.d_params,
+      colocate_gradients_with_ops=True
+    )
+    d_grads_in_D_Net, _ = tf.clip_by_global_norm(d_grads_in_D_Net, PARAM.max_gradient_norm)
+
+    # region d_grads_in_seNet
+    # ifD_passGrad_to_SE = tf.cast(tf.bitwise.bitwise_and(self.global_step//2250, 1), tf.float32) # Alternate Training for GANs
+    ifD_passGrad_to_SE = 1.0
+    d_grads_in_seNet = [grad*PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE for grad in d_grads_in_seNet]
+    if PARAM.D_GRL:
+      d_grads_in_seNet = [-grad for grad in d_grads_in_seNet] # GRL
+    if PARAM.D_Grad_DCC: # Direction Consistent Constraints
+      ## D_GRL_005
+      # d_grads_in_seNet = [
+      #     tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.reduce_sum(grad1*grad1, -1)), -1)*grad1 for grad1, grad2 in zip(se_loss_grads, d_grads_in_seNet)]
+
+      ## D_GRL_006
+      # constrainted_se_grads_fromD = []
+      # for grad1, grad2 in zip(se_loss_grads, d_grads_in_seNet):
+      #   w_of_grad2 = (1+tf.abs(tf.sign(grad1)+tf.sign(grad2))) // 2
+      #   constrainted_grad2 = w_of_grad2 * grad2
+      #   constrainted_se_grads_fromD.append(constrainted_grad2)
+      # d_grads_in_seNet = constrainted_se_grads_fromD
+
+      ## D_GRL_007
+      constrainted_se_grads_fromD = []
+      for grad1, grad2 in zip(se_loss_grads, d_grads_in_seNet):
+        grad_shape = grad1.shape.as_list()
+        vec1 = tf.reshape(grad1,[-1])
+        vec2 = tf.reshape(grad2,[-1])
+        prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+        constrainted_grad2 = tf.reshape(prj_on_vec1, grad_shape)
+        constrainted_se_grads_fromD.append(constrainted_grad2)
+      d_grads_in_seNet = constrainted_se_grads_fromD
+
+      ## D_GRL_008
+      # shape_list = []
+      # split_sizes = []
+      # vec1 = tf.constant([])
+      # vec2 = tf.constant([])
+      # constrainted_se_grads_fromD = []
+      # for grad1, grad2 in zip(se_loss_grads, d_grads_in_seNet):
+      #   grad_shape = grad1.shape.as_list()
+      #   shape_list.append(grad_shape)
+      #   vec1_t = tf.reshape(grad1,[-1])
+      #   vec2_t = tf.reshape(grad2,[-1])
+      #   vec_len = vec1_t.shape.as_list()[0]
+      #   split_sizes.append(vec_len)
+      #   vec1 = tf.concat([vec1, vec1_t], 0)
+      #   vec2 = tf.concat([vec2, vec2_t], 0)
+      # prj_on_vec1 = tf.nn.relu(tf.reduce_sum(vec1*vec2,-1)/tf.reduce_sum(vec1*vec1, -1))*vec1
+      # # print(len(shape_list), flush=True)
+      # constrainted_se_grads_fromD = tf.split(prj_on_vec1, split_sizes)
+      # constrainted_se_grads_fromD = [
+      #     tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
+      # d_grads_in_seNet = constrainted_se_grads_fromD
+
+      # endregion d_grad_in_seNet
+
+    # region d_grads_in_D_net
+    d_grads_in_D_Net = [grad*PARAM.discirminator_grad_coef for grad in d_grads_in_D_Net]
+    # endregion d_grads_in_D_net
+
+    all_grads = se_loss_grads
+    all_params = self.se_net_params
+
+    if "deep_feature_loss" in PARAM.D_used_losses:
+      # merge se_grads from se_loss and deep_feature_loss
+      all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, deep_f_loss_grads)]
+
+    if "D_loss" in PARAM.D_used_losses:
+      # merge se_grads D_loss
+      all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, d_grads_in_seNet)]
+
+      # merge d_grads_in_D_Net and D_params
+      all_grads = all_grads + d_grads_in_D_Net
+      all_params = self.se_net_params + self.d_params
+
+    all_clipped_grads, _ = tf.clip_by_global_norm(all_grads, PARAM.max_gradient_norm)
+    self._train_op = self.optimizer.apply_gradients(zip(all_clipped_grads, all_params),
+                                                    global_step=self.global_step)
+
 
   def forward(self, mixed_wav_batch):
     r_outputs = self.real_networks_forward(mixed_wav_batch)
@@ -62,8 +171,10 @@ class DISCRIMINATOR_AD_MODEL(Module):
       a = self.variables._f_log_a
       b = self.variables._f_log_b
       c = self.variables._f_log_c
-      clean_mag_batch_label = (tf.log(clean_mag_batch_label * b + c) - tf.log(c))*a
-      r_est_clean_mag_batch = (tf.log(r_est_clean_mag_batch * b + c) - tf.log(c))*a
+      clean_mag_batch_label = misc_utils.LogFilter_of_Loss(a,b,c,clean_mag_batch_label,
+                                                           PARAM.LogFilter_type)
+      r_est_clean_mag_batch = misc_utils.LogFilter_of_Loss(a,b,c,r_est_clean_mag_batch,
+                                                           PARAM.LogFilter_type)
 
     # region real net losses
     ## frequency domain loss
