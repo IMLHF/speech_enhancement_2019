@@ -230,7 +230,7 @@ def main():
   with g.as_default():
     with tf.name_scope("inputs"):
       train_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.train_name)
-      val_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.validation_name, False)
+      val_inputs = dataloader.get_batch_inputs_from_dataset(PARAM.validation_name)
 
     ModelC, VariablesC = model_builder.get_model_class_and_var()
 
