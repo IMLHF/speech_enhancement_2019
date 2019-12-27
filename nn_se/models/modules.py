@@ -245,7 +245,7 @@ class Module(object):
     self._d_loss = tf.reduce_sum(tf.zeros([1]))
     self._deep_features_loss = 0.0
     self._deep_features_losses = 0.0
-    if PARAM.model_name == "DISCRIMINATOR_AD_MODEL":
+    if PARAM.model_name == "DISCRIMINATOR_AD_MODEL" and mode != PARAM.MODEL_INFER_KEY:
       self._d_loss, self._deep_features_losses = self.get_discriminator_loss(forward_outputs)
       for l in self._deep_features_losses:
         self._deep_features_loss += l
