@@ -117,13 +117,16 @@ class DISCRIMINATOR_AD_MODEL(Module):
       # merge se_grads from se_loss and deep_feature_loss
       all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, deep_f_loss_grads)]
 
-    if "D_loss" in PARAM.D_used_losses and PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE > 1e-12:
-      # merge se_grads from D_loss
-      all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, d_grads_in_seNet)]
+    if "D_loss" in PARAM.D_used_losses:
+      if PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE > 1e-12:
+        # merge se_grads from D_loss
+        all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, d_grads_in_seNet)]
 
-      # merge d_grads_in_D_Net and D_params
-      all_grads = all_grads + d_grads_in_D_Net
-      all_params = self.se_net_params + self.d_params
+      if PARAM.discirminator_grad_coef > 1e-12:
+        print('optimizer D')
+        # merge d_grads_in_D_Net and D_params
+        all_grads = all_grads + d_grads_in_D_Net
+        all_params = self.se_net_params + self.d_params
 
     all_clipped_grads, _ = tf.clip_by_global_norm(all_grads, PARAM.max_gradient_norm)
     self._train_op = self.optimizer.apply_gradients(zip(all_clipped_grads, all_params),
@@ -150,8 +153,10 @@ class DISCRIMINATOR_AD_MODEL(Module):
     if PARAM.deepFeatureLoss_softmaxLogits:
       deep_f = tf.nn.softmax(deep_f)
     labels, ests = tf.split(deep_f, 2, axis=0) # [batch,time,f]
-    loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0)) * PARAM.deepFeatureLoss_coef
+    loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0))
     losses.append(loss)
+    n_deep = len(losses) * 1.0
+    losses = [loss * PARAM.deepFeatureLoss_coef / n_deep for loss in losses]
     return losses
 
 
@@ -161,8 +166,8 @@ class DISCRIMINATOR_AD_MODEL(Module):
     loss = tf.losses.softmax_cross_entropy(one_hots_labels, logits) # max about 0.7
     deep_features_losses = self.get_deep_features_losses(deep_features)
 
-    # w_DFL_ref_DLoss = 1.0/(1.0+tf.exp(tf.stop_gradient(loss)*40.0-4.0))
-    w_DFL_ref_DLoss = tf.nn.sigmoid(4.0-tf.stop_gradient(loss)*40.0)
+    # w_DFL_ref_DLoss = 1.0/(1.0+tf.exp(tf.stop_gradient(loss + 1e-12)*40.0-4.0))
+    w_DFL_ref_DLoss = tf.nn.sigmoid(4.0-tf.stop_gradient(loss)*40.0) # loss+1e-12 is a new tf node
     if PARAM.weighted_DFL_by_DLoss:
       deep_features_losses = [dfloss*w_DFL_ref_DLoss for dfloss in deep_features_losses]
 

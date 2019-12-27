@@ -173,6 +173,7 @@ def eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses):
     losses_to_run.append(all_losses[l_name])
 
   # losses_to_run.append(val_model.clean_mag_batch)
+  # losses_to_run.append(val_model._debufgradients)
 
   total_show_losses_vec = None
   while True:
@@ -181,6 +182,7 @@ def eval_one_epoch(sess, val_model, stop_criterion_losses, show_losses):
 
       # debug_mag = run_out_losses[-1]
       # run_out_losses = run_out_losses[:-1]
+      # print(debug_mag)
 
       runOut_show_losses = run_out_losses[:len(show_losses)]
       runOut_show_losses = round_lists(runOut_show_losses, 4)
