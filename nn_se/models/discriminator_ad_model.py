@@ -56,9 +56,9 @@ class DISCRIMINATOR_AD_MODEL(Module):
     # ifD_passGrad_to_SE = tf.cast(tf.bitwise.bitwise_and(self.global_step//2250, 1), tf.float32) # Alternate Training for GANs
     ifD_passGrad_to_SE = 1.0
     d_grads_in_seNet = [grad*PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE for grad in d_grads_in_seNet]
-    if PARAM.D_GRL:
+    if PARAM.D_GRL and PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE > 1e-12:
       d_grads_in_seNet = [-grad for grad in d_grads_in_seNet] # GRL
-    if PARAM.D_Grad_DCC: # Direction Consistent Constraints
+    if PARAM.D_Grad_DCC and PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE > 1e-12: # Direction Consistent Constraints
       ## D_GRL_005
       # d_grads_in_seNet = [
       #     tf.expand_dims(tf.nn.relu(tf.reduce_sum(grad1*grad2,-1)/tf.reduce_sum(grad1*grad1, -1)), -1)*grad1 for grad1, grad2 in zip(se_loss_grads, d_grads_in_seNet)]
@@ -117,8 +117,8 @@ class DISCRIMINATOR_AD_MODEL(Module):
       # merge se_grads from se_loss and deep_feature_loss
       all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, deep_f_loss_grads)]
 
-    if "D_loss" in PARAM.D_used_losses:
-      # merge se_grads D_loss
+    if "D_loss" in PARAM.D_used_losses and PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE > 1e-12:
+      # merge se_grads from D_loss
       all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, d_grads_in_seNet)]
 
       # merge d_grads_in_D_Net and D_params
@@ -150,7 +150,7 @@ class DISCRIMINATOR_AD_MODEL(Module):
     if PARAM.deepFeatureLoss_softmaxLogits:
       deep_f = tf.nn.softmax(deep_f)
     labels, ests = tf.split(deep_f, 2, axis=0) # [batch,time,f]
-    loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0))
+    loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0)) * PARAM.deepFeatureLoss_coef
     losses.append(loss)
     return losses
 
