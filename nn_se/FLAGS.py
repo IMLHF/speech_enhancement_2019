@@ -113,6 +113,7 @@ class BaseConfig(StaticKey):
   deepFeatureLoss_softmaxLogits = False
   deepFeatureLoss_coef = 1.0
   weighted_DFL_by_DLoss = False # if D_loss is large (about 0.7) w_DFL tends to 0.0, otherwise tends to $deepFeatureLoss_coef
+  D_strict_degree_for_DFL = 40.0 # for weighted_DFL_by_DLoss
 
   feature_type = "DFT" # DFT | DCT | QCT
 
@@ -212,7 +213,7 @@ class nn_se_rSpecMSE_fixISTFTWindow(BaseConfig): # done 15123
   lstm_layers = 1
   loss_name = ["real_net_spec_mse"]
 
-class nn_se_rSpecMSE_DCT(p40): # running p40
+class nn_se_rSpecMSE_DCT(p40): # done p40
   """
   cnn1blstm1lstm DCT features
   """
@@ -395,7 +396,7 @@ class nn_se_rSpecMSE_D_GRL_307T1(p40): # done p40
   show_losses = ["real_net_spec_mse", "d_loss"]
 
 
-class nn_se_rSpecMSE_joint_SE_D_DFL(p40): # running p40
+class nn_se_rSpecMSE_joint_SE_D_DFL(p40): # done p40 # dead
   '''
   half full vec constrained
   '''
@@ -414,7 +415,7 @@ class nn_se_rSpecMSE_joint_SE_D_DFL(p40): # running p40
   D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
   deepFeatureLoss_coef = 0.1
 
-class nn_se_rSpecMSE_joint_SE_D_WDFLbyD(p40): # running p40
+class nn_se_rSpecMSE_joint_SE_D_WDFLbyD(p40): # done p40
   '''
   half full vec constrained
   '''
@@ -434,6 +435,73 @@ class nn_se_rSpecMSE_joint_SE_D_WDFLbyD(p40): # running p40
 
   deepFeatureLoss_coef = 1.0
   weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 40.0
+
+class nn_se_rSpecMSE_joint_SE_D_WDFLbyD_S100(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+  D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
+
+  deepFeatureLoss_coef = 1.0
+  weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 100.0
+
+class nn_se_rSpecMSE_joint_SE_D_WDFLbyD_S200(p40): # running p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+  D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
+
+  deepFeatureLoss_coef = 1.0
+  weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 200.0
+
+class nn_se_rSpecMSE_joint_SE_D_WDFLbyD_S300(p40): # running p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+  D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
+
+  deepFeatureLoss_coef = 1.0
+  weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 300.0
 
 class nn_se_rSpecMSE_D_GRL_008(p40): # done p40
   '''
@@ -1195,7 +1263,7 @@ class nn_se_rMagMSE_AD_LogFilterLoss002(BaseConfig): # running 15043
   stop_criterion_losses = ["real_net_spec_mse"]
   show_losses = ["real_net_mag_mse", "d_loss"]
 
-class nn_se_rMagMSE_AD_LogFilterLoss003(p40): # done p40 # DEAD
+class nn_se_rMagMSE_AD_LogFilterLoss003(p40): # done p40 #DEAD
   '''
   half full vec constrained
   '''
@@ -1233,6 +1301,6 @@ class nn_se_rMagMSE_AD_LogFilterLoss002a(p40): # running p40
   stop_criterion_losses = ["real_net_spec_mse"]
   show_losses = ["real_net_mag_mse", "real_net_spec_mse", "d_loss"]
 
-PARAM = nn_se_rSpecMSE_joint_SE_D_WDFLbyD
+PARAM = nn_se_rSpecMSE_joint_SE_D_WDFLbyD_S300
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train

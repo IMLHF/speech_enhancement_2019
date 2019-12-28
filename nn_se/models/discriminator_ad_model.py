@@ -167,7 +167,7 @@ class DISCRIMINATOR_AD_MODEL(Module):
     deep_features_losses = self.get_deep_features_losses(deep_features)
 
     # w_DFL_ref_DLoss = 1.0/(1.0+tf.exp(tf.stop_gradient(loss + 1e-12)*40.0-4.0))
-    w_DFL_ref_DLoss = tf.nn.sigmoid(4.0-tf.stop_gradient(loss)*40.0) # loss+1e-12 is a new tf node
+    w_DFL_ref_DLoss = tf.nn.sigmoid(4.0-tf.stop_gradient(loss)*PARAM.D_strict_degree_for_DFL) # loss+1e-12 is a new tf node
     if PARAM.weighted_DFL_by_DLoss:
       deep_features_losses = [dfloss*w_DFL_ref_DLoss for dfloss in deep_features_losses]
 
