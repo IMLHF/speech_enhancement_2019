@@ -70,7 +70,7 @@ class RealVariables(object):
                                            initializer=tf.constant(PARAM.learning_rate))
 
     # linear_coef and log_bias in log features # f = a*[log(bx+c)-log(c)], (a,b,c>0), init:a=0.1,b=1.0,c=1e-6
-    self._f_log_a_var = tf.compat.v1.get_variable('LogFilter/f_log_a', dtype=tf.float32,
+    self._f_log_a_var = tf.compat.v1.get_variable('LogFilter/f_log_a', dtype=tf.float32, # belong to discriminator
                                                   initializer=tf.constant(PARAM.f_log_a), trainable=PARAM.f_log_var_trainable)
     self._f_log_b_var = tf.compat.v1.get_variable('LogFilter/f_log_b', dtype=tf.float32,
                                                   initializer=tf.constant(PARAM.f_log_b), trainable=PARAM.f_log_var_trainable)
@@ -325,10 +325,18 @@ class Module(object):
       mixed_mag_batch = mixed_spec_batch
     elif PARAM.feature_type == "DFT":
       mixed_mag_batch = tf.math.abs(mixed_spec_batch)
+      self.mixed_angle_batch = tf.math.angle(mixed_spec_batch)
     elif PARAM.feature_type == "DCT":
       mixed_mag_batch = mixed_spec_batch
-    self.mixed_angle_batch = tf.math.angle(mixed_spec_batch)
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
+
+    if PARAM.add_logFilter_in_SE_inputs:
+      a = tf.stop_gradient(self.variables._f_log_a)
+      b = tf.stop_gradient(self.variables._f_log_b)
+      c = tf.stop_gradient(self.variables._f_log_c)
+      mixed_mag_batch = misc_utils.LogFilter_of_Loss(a, b, c, mixed_mag_batch,
+                                                     PARAM.LogFilter_type)
+
     mask = self.CNN_RNN_FC(mixed_mag_batch, training)
 
     if PARAM.net_out_mask:
