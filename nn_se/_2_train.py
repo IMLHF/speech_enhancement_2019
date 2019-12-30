@@ -302,7 +302,7 @@ def main():
     ckpt_name = PARAM().config_name()+('_iter%04d_trloss%.4f_valloss%.4f_lr%.2e_duration%ds' % (
         epoch, trainOutputs.avg_loss, evalOutputs.avg_loss, trainOutputs.lr,
         trainOutputs.cost_time+evalOutputs.cost_time))
-    if val_loss_rel_impr > 0:
+    if val_loss_rel_impr > 0 or PARAM.no_abandon:
       train_model.saver.save(sess, str(ckpt_dir.joinpath(ckpt_name)))
       evalOutputs_prev = evalOutputs
       best_ckpt_name = ckpt_name
