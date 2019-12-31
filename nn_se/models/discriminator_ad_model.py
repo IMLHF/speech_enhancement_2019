@@ -23,8 +23,6 @@ class DISCRIMINATOR_AD_MODEL(Module):
     if mode == PARAM.MODEL_VALIDATE_KEY or mode == PARAM.MODEL_INFER_KEY:
       return
 
-    assert "se_loss" in PARAM.D_used_losses
-
     ## se_loss grads 增强网络的损失的梯度，例如MSE
     se_loss_grads = self.se_loss_grads
 
@@ -103,19 +101,28 @@ class DISCRIMINATOR_AD_MODEL(Module):
       # constrainted_se_grads_fromD = [
       #     tf.reshape(grad, grad_shape) for grad, grad_shape in zip(constrainted_se_grads_fromD, shape_list)]
       # d_grads_in_seNet = constrainted_se_grads_fromD
-
-      # endregion d_grad_in_seNet
+    # endregion d_grad_in_seNet
 
     # region d_grads_in_D_net
     d_grads_in_D_Net = [grad*PARAM.discirminator_grad_coef for grad in d_grads_in_D_Net]
     # endregion d_grads_in_D_net
 
-    all_grads = se_loss_grads
-    all_params = self.se_net_params
+    all_grads = []
+    all_params = []
+
+    if "se_loss" in PARAM.D_used_losses:
+      all_grads = se_loss_grads
+      all_params = self.se_net_params
 
     if "deep_feature_loss" in PARAM.D_used_losses:
-      # merge se_grads from se_loss and deep_feature_loss
-      all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, deep_f_loss_grads)]
+      if len(all_grads)==0:
+        all_grads = deep_f_loss_grads
+        all_params = self.se_net_params
+      else:
+        # merge se_grads from se_loss and deep_feature_loss
+        all_grads = [grad1+grad2 for grad1, grad2 in zip(all_grads, deep_f_loss_grads)]
+
+    assert len(all_grads)>0, "se_loss and deep_feature_loss are all turn off."
 
     if "D_loss" in PARAM.D_used_losses:
       if PARAM.se_grad_fromD_coef*ifD_passGrad_to_SE > 1e-12:
