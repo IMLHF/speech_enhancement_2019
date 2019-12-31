@@ -25,10 +25,10 @@ class DISCRIMINATOR_AD_MODEL(Module):
 
     assert "se_loss" in PARAM.D_used_losses
 
-    ## se_loss grads
+    ## se_loss grads 增强网络的损失的梯度，例如MSE
     se_loss_grads = self.se_loss_grads
 
-    ## deep features loss grads
+    ## deep features loss grads 判别器中deepFeatureLoss对增强网络求导的梯度
     deep_f_loss_grads = tf.gradients(
       self._deep_features_loss,
       self.se_net_params,
@@ -36,7 +36,7 @@ class DISCRIMINATOR_AD_MODEL(Module):
     )
     deep_f_loss_grads, _ = tf.clip_by_global_norm(deep_f_loss_grads, PARAM.max_gradient_norm)
 
-    ## discriminator loss grads in se_net
+    ## discriminator loss grads in se_net 判别器损失对增强网络的梯度
     d_grads_in_seNet = tf.gradients(
       self._d_loss,
       self.se_net_params,
@@ -44,7 +44,7 @@ class DISCRIMINATOR_AD_MODEL(Module):
     )
     d_grads_in_seNet, _ = tf.clip_by_global_norm(d_grads_in_seNet, PARAM.max_gradient_norm)
 
-    ## discriminator loss grads in D_net
+    ## discriminator loss grads in D_net 判别器损失对判别网络的梯度
     d_grads_in_D_Net = tf.gradients(
       self._d_loss,
       self.d_params,
@@ -150,7 +150,7 @@ class DISCRIMINATOR_AD_MODEL(Module):
       losses.append(loss)
 
     deep_f = deep_features[-1]
-    if PARAM.deepFeatureLoss_softmaxLogits:
+    if PARAM.deepFeatureLoss_softmaxLogits and not PARAM.simple_D: # simple_D not save logits as DeepFeatureLoss
       deep_f = tf.nn.softmax(deep_f)
     labels, ests = tf.split(deep_f, 2, axis=0) # [batch,time,f]
     loss = tf.reduce_mean(tf.reduce_sum(tf.square(labels-ests), axis=0))
@@ -163,6 +163,7 @@ class DISCRIMINATOR_AD_MODEL(Module):
   def get_discriminator_loss(self, forward_outputs):
     r_est_clean_mag_batch, r_est_clean_spec_batch, r_est_clean_wav_batch = forward_outputs
     logits, one_hots_labels, deep_features = self.clean_and_enhanced_mag_discriminator(self.clean_mag_batch, r_est_clean_mag_batch)
+    # print("23333333333333", one_hots_labels.shape.as_list(), logits.shape.as_list())
     loss = tf.losses.softmax_cross_entropy(one_hots_labels, logits) # max about 0.7
     deep_features_losses = self.get_deep_features_losses(deep_features)
 
