@@ -150,6 +150,8 @@ class DISCRIMINATOR_AD_MODEL(Module):
     '''
     deep_features: list,
     '''
+    if PARAM.DFL_use_Dbottom_only:
+      deep_features = deep_features[:1]
     losses = []
     for deep_f in deep_features[:-1]:
       labels, ests = tf.split(deep_f, 2, axis=0) # [batch,time,f]

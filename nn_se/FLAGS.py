@@ -103,6 +103,7 @@ class BaseConfig(StaticKey):
   frame_level_D = False # discriminate frame is noisy or clean
   simple_D = False # if true, frame_level_D must be true.
   D_used_losses = ["se_loss","D_loss","deep_feature_loss"]
+  DFL_use_Dbottom_only = False
 
   # just for "DISCRIMINATOR_AD_MODEL"
   D_GRL = False
@@ -286,7 +287,7 @@ class nn_se_rSpecMSE_D_GRL_004(p40): # done p40
   se_grad_fromD_coef = 1.0
   discirminator_grad_coef = 1.0
 
-class nn_se_rSpecMSE_D_GRL_004_FLD(p40): # running p40
+class nn_se_rSpecMSE_D_GRL_004_FLD(p40): # done p40
   '''
   FLD: frame level D
   '''
@@ -567,7 +568,7 @@ class nn_se_rSpecMSE_joint_SE_D_WDFLbyD_S500(p40): # done p40
   weighted_DFL_by_DLoss = True
   D_strict_degree_for_DFL = 500.0
 
-class nn_se_rSpecMSE_joint_SE_simpleD_WDFLbyD_S300(p40): # running p40
+class nn_se_rSpecMSE_joint_SE_simpleD_WDFLbyD_S300(p40): # done p40
   '''
   half full vec constrained
   '''
@@ -592,7 +593,117 @@ class nn_se_rSpecMSE_joint_SE_simpleD_WDFLbyD_S300(p40): # running p40
   frame_level_D = True
   simple_D = True
 
-class nn_se_rSpecMSE_joint_SE_simpleD_WDFLbyD_S500(BaseConfig): # running 15123
+class nn_se_rSpecMSE_joint_SE_simpleD2_WDFLbyD_S300(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+  D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
+
+  deepFeatureLoss_coef = 1.0
+  weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 300.0
+
+  frame_level_D = True
+  simple_D = True
+
+class nn_se_rSpecMSE_joint_SE_simpleD2_WDFLbyD_S300_noAbandon(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+  D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
+
+  deepFeatureLoss_coef = 1.0
+  weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 300.0
+
+  frame_level_D = True
+  simple_D = True
+
+  max_epoch = 20
+  no_abandon = True
+
+class nn_se_rSpecMSE_joint_SE_simpleD2_WDFLbyDbottom_S300(BaseConfig): # running 15123
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+  D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
+
+  deepFeatureLoss_coef = 1.0
+  weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 300.0
+
+  frame_level_D = True
+  simple_D = True
+
+  DFL_use_Dbottom_only = True
+
+class nn_se_rSpecMSE_joint_SE_simpleD2_WDFLbyDbottom_S300_noAbandon(p40): # running p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  D_GRL = True
+  D_Grad_DCC = True
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "deep_features_loss", "d_loss", "deep_features_losses"]
+  deepFeatureLoss_softmaxLogits = True
+  D_used_losses = ["se_loss", "deep_feature_loss", "D_loss"]
+
+  deepFeatureLoss_coef = 1.0
+  weighted_DFL_by_DLoss = True
+  D_strict_degree_for_DFL = 300.0
+
+  frame_level_D = True
+  simple_D = True
+
+  DFL_use_Dbottom_only = True
+
+  max_epoch = 20
+  no_abandon = True
+
+class nn_se_rSpecMSE_joint_SE_simpleD_WDFLbyD_S500(BaseConfig): # done 15123
   '''
   half full vec constrained
   '''
@@ -616,7 +727,7 @@ class nn_se_rSpecMSE_joint_SE_simpleD_WDFLbyD_S500(BaseConfig): # running 15123
 
   simple_D = True
 
-class nn_se_rSpecMSE_joint_simpleD_WDFLbyD_SX00(p40): # pendding p40 wait for 500 and 300
+class nn_se_rSpecMSE_joint_simpleD2_WDFLbyD_S300(p40): # done p40
   '''
   half full vec constrained
   '''
@@ -636,13 +747,33 @@ class nn_se_rSpecMSE_joint_simpleD_WDFLbyD_SX00(p40): # pendding p40 wait for 50
 
   deepFeatureLoss_coef = 1.0
   weighted_DFL_by_DLoss = True
-  D_strict_degree_for_DFL = 000.0 # TODO: fixed
+  D_strict_degree_for_DFL = 300.0
 
   frame_level_D = True
   simple_D = True
 
   max_epoch = 20
   no_abandon = True
+
+class nn_se_rSpecMSE_joint_SE_only_noAbandon(p40): # done p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_spec_mse"]
+  GPU_PARTION = 0.47
+  se_grad_fromD_coef = 0.0
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_spec_mse", "d_loss"]
+  D_used_losses = ["se_loss"]
+
+  simple_D = True
+
+  max_epoch = 30
+  no_abandon = True
+
 
 class nn_se_rSpecMSE_D_GRL_008(p40): # done p40
   '''
@@ -1442,7 +1573,7 @@ class nn_se_rMagMSE_AD_LogFilterLoss002a(p40): # done p40 # dead
   stop_criterion_losses = ["real_net_spec_mse"]
   show_losses = ["real_net_mag_mse", "real_net_spec_mse", "d_loss"]
 
-class nn_se_rMagMSE_AD_LogFilterLoss002a_noAbandon(p40): # running p40
+class nn_se_rMagMSE_AD_LogFilterLoss002a_noAbandon(p40): # done p40
   '''
   half full vec constrained
   '''
@@ -1463,6 +1594,29 @@ class nn_se_rMagMSE_AD_LogFilterLoss002a_noAbandon(p40): # running p40
   no_abandon = True
   max_epoch = 30
 
+class nn_se_rMagMSE_AD_LogFilterLoss002b_noAbandon(p40): # running p40
+  '''
+  half full vec constrained
+  '''
+  model_name = 'DISCRIMINATOR_AD_MODEL'
+  blstm_layers = 1
+  lstm_layers = 1
+  loss_name = ["real_net_mag_mse", "real_net_spec_mse"]
+  GPU_PARTION = 0.45
+  se_grad_fromD_coef = 0.0
+  discirminator_grad_coef = 1.0
+  add_logFilter_in_Discrimitor = True
+  add_logFilter_in_SE_Loss = True
+  LogFilter_type = 2
+  f_log_a = 1.0
+  f_log_b = 0.0001
+  f_log_c = 0.0
+  log_filter_eps_c = 0.001
+  stop_criterion_losses = ["real_net_spec_mse"]
+  show_losses = ["real_net_mag_mse", "real_net_spec_mse", "d_loss"]
+  no_abandon = True
+  max_epoch = 20
+
 #nn_se_rMagMSE_AD_LogFilterLoss002a_noAbandonLI :LI log inputs
 class nn_se_rMagMSE_AD_LogFilterLoss002a_noAbandonLI(BaseConfig): # running 15043
   '''
@@ -1480,13 +1634,15 @@ class nn_se_rMagMSE_AD_LogFilterLoss002a_noAbandonLI(BaseConfig): # running 1504
   add_logFilter_in_SE_Loss = True
   LogFilter_type = 2
   f_log_a = 0.4
+  f_log_c = 0.0
   log_filter_eps_c = 0.001
   stop_criterion_losses = ["real_net_spec_mse"]
   show_losses = ["real_net_mag_mse", "real_net_spec_mse", "d_loss"]
   no_abandon = True
-  max_epoch = 30
+  max_epoch = 20
+
   add_logFilter_in_SE_inputs = True
 
-PARAM = nn_se_rSpecMSE_joint_SE_simpleD_WDFLbyD_S300
+PARAM = nn_se_rSpecMSE_joint_SE_simpleD2_WDFLbyDbottom_S300_noAbandon
 
 # CUDA_VISIBLE_DEVICES=2 OMP_NUM_THREADS=4 python -m xxx._2_train
