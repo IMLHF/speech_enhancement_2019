@@ -132,9 +132,9 @@ class RealVariables(object):
     if PARAM.model_name == "DISCRIMINATOR_AD_MODEL":
       if PARAM.simple_D:
         self.d_blstm = tf.keras.layers.Dense(self.N_RNN_CELL, name='discriminator/d_dense_1')
-        self.d_lstm = tf.keras.layers.Dense(self.N_RNN_CELL//2, name='discriminator/d_dense_2')
-        self.d_denses = [tf.keras.layers.Dense(self.N_RNN_CELL//2, name='discriminator/d_dense_3'),
-                         tf.keras.layers.Dense(self.N_RNN_CELL, name='discriminator/d_dense_4'),
+        self.d_lstm = tf.keras.layers.Dense(self.N_RNN_CELL//2, activation='tanh', name='discriminator/d_dense_2')
+        self.d_denses = [tf.keras.layers.Dense(self.N_RNN_CELL//2, activation='tanh', name='discriminator/d_dense_3'),
+                         tf.keras.layers.Dense(self.N_RNN_CELL, activation='leaky_relu', name='discriminator/d_dense_4'),
                          tf.keras.layers.Dense(2, name='discriminator/d_dense_5')]
       else:
         forward_lstm = tf.keras.layers.LSTM(self.N_RNN_CELL, dropout=0.2, implementation=2,
