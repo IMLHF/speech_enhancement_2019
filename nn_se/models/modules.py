@@ -338,15 +338,16 @@ class Module(object):
     elif PARAM.feature_type == "DCT":
       mixed_mag_batch = mixed_spec_batch
     training = (self.mode == PARAM.MODEL_TRAIN_KEY)
+    input_feature = mixed_mag_batch
 
     if PARAM.add_logFilter_in_SE_inputs:
       a = tf.stop_gradient(self.variables._f_log_a)
       b = tf.stop_gradient(self.variables._f_log_b)
       c = tf.stop_gradient(self.variables._f_log_c)
-      mixed_mag_batch = misc_utils.LogFilter_of_Loss(a, b, c, mixed_mag_batch,
-                                                     PARAM.LogFilter_type)
+      input_feature = misc_utils.LogFilter_of_Loss(a, b, c, mixed_mag_batch,
+                                                   PARAM.LogFilter_type)
 
-    mask = self.CNN_RNN_FC(mixed_mag_batch, training)
+    mask = self.CNN_RNN_FC(input_feature, training)
 
     if PARAM.net_out_mask:
       est_clean_mag_batch = tf.multiply(mask, mixed_mag_batch) # mag estimated
