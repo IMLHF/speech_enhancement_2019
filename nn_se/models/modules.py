@@ -75,7 +75,7 @@ class RealVariables(object):
     self._f_log_b_var = tf.compat.v1.get_variable('LogFilter/f_log_b', dtype=tf.float32,
                                                   initializer=tf.constant(PARAM.f_log_b), trainable=PARAM.f_log_var_trainable)
     self._f_log_c_var = tf.compat.v1.get_variable('LogFilter/f_log_c', dtype=tf.float32,
-                                                  initializer=tf.constant(PARAM.f_log_c), trainable=PARAM.f_log_var_trainable)
+                                                  initializer=tf.constant(PARAM.f_log_c), trainable=False)
     self._f_log_a = PARAM.log_filter_eps_a_b + tf.nn.relu(self._f_log_a_var)
     self._f_log_b = PARAM.log_filter_eps_a_b + tf.nn.relu(self._f_log_b_var)
     self._f_log_c = PARAM.log_filter_eps_c + tf.nn.relu(self._f_log_c_var)
@@ -481,11 +481,13 @@ class Module(object):
       outputs3 = self.variables.d_denses[0](outputs2)
       deep_features.append(outputs3)
 
-      inputs4 = tf.concat([outputs3, outputs2], axis=-1)
+      # inputs4 = tf.concat([outputs3, outputs2], axis=-1)
+      inputs4 = outputs3
       outputs4 = self.variables.d_denses[1](inputs4)
       deep_features.append(outputs4)
 
-      inputs5 = tf.concat([outputs4, outputs1], axis=-1)
+      # inputs5 = tf.concat([outputs4, outputs1], axis=-1)
+      inputs5 = outputs4
       logits = self.variables.d_denses[2](inputs5)
     else:
       outputs = self.variables.d_blstm(outputs, training=training) # [batch*2, time, fea]
